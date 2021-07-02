@@ -4,5 +4,9 @@
 # Environments
 .env
 
+# Packaging
+*.egg-info
+__pycache__
+
 # Arquivos auxiliares
 images/
