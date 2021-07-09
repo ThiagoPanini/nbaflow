@@ -10,3 +10,6 @@ __pycache__
 
 # Arquivos auxiliares
 images/
+
+# Tableau
+viz/
