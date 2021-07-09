@@ -504,6 +504,7 @@ class NBAGamelog:
 
             # Coletando dados da requisição em formato DataFrame
             df_gamelog = gamelog_season.player_game_log.get_data_frame()
+            df_gamelog['SEASON'] = season
             df_gamelog['SEASON_TYPE'] = season_type_all_star
 
             # Transformando coluna de data na base
@@ -862,7 +863,7 @@ class NBAGamelog:
         timeout_increase = kwargs['timeout_increase'] if 'timeout_increase' in kwargs else 10
         
         # Iterando sobre jogadores ativos
-        for player_id in nba_gamelog.active_players['id'].values:
+        for player_id in self.active_players['id'].values:
             player_log_id = self.player_identification(player_id=player_id, player_id_key=player_log_key)
             complete_gamelog = complete_gamelog.append(self.player_gamelog_all_seasons_complete(player_id=player_id,
                                                                                                 season_types=season_types,
