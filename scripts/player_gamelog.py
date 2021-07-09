@@ -29,7 +29,7 @@ Table of Contents
 """
 
 # Importando classe encapsulada
-from gamelog.gamelog import NBAGamelog
+from core.gamelog import NBAGamelog
 
 # Funções auxiliares da biblioteca NBA
 from nba_api.stats.static import players
