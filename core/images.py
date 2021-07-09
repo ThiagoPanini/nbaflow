@@ -248,7 +248,8 @@ def get_players_info(timeout=30, error_strategy='infinity', **kwargs):
 
 # Definindo função para extração e salvamento local de imagens de jogadores
 def get_players_images(static_url, img_format='.png', team_id_col='team_id', player_id_col='player_id',
-                       player_name_code_col='player_name_code', imgs_path='../data/images/', timeout=30, **kwargs):
+                       player_name_code_col='player_name_code', imgs_path=os.path.join(os.getcwd(), 'data', 'images'), 
+                       timeout=30, **kwargs):
     
     """
     Realiza a extração de uma base de jogadores alvo que tiveram
@@ -369,7 +370,7 @@ def get_players_images(static_url, img_format='.png', team_id_col='team_id', pla
         cuja requisição de imagens foi obtida com falha.
         [type: pd.DataFrame]
     """
-    
+
     # Extraindo argumentos adicionais para retorno de base alvo de jogadores
     error_strategy = kwargs['error_strategy'] if 'error_strategy' in kwargs else 'infinity'
     error_verbose = kwargs['error_verbose'] if 'error_verbose' in kwargs else 5
@@ -409,12 +410,12 @@ def get_players_images(static_url, img_format='.png', team_id_col='team_id', pla
 
         # Salvando imagem em diretório local
         try:
-            with open(f'{imgs_path + row["player_name_img"]}', 'wb') as f:
+            with open(f'{os.path.join(imgs_path, row["player_name_img"])}', 'wb') as f:
                 f.write(img.content)
         except FileNotFoundError as fe:
             # Diretório não existente. Criando um e salvando arquivo
             os.makedirs(imgs_path)
-            with open(f'{imgs_path + row["player_name_img"]}', 'wb') as f:
+            with open(f'{os.path.join(imgs_path, row["player_name_img"])}', 'wb') as f:
                 f.write(img.content)
 
         # Comunicando usuário
