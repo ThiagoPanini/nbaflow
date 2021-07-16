@@ -8,8 +8,13 @@
 *.egg-info
 __pycache__
 
-# Arquivos auxiliares
+# Arquivos de dados auxiliares
+data/images/
+data/backup/
+data/*.hyper
 
+# Scripts dep rocessamento auxiliar paralelo
+scripts/tmp_parallel_run;
 
 # Tableau
 viz/
