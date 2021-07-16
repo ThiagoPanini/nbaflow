@@ -335,13 +335,9 @@ class NBAGamelog:
         if error_strategy == 'attempts':
             
             # Iterando sobre número finito de tentativas
-            for i in range(num_attempts):
-                
-                # Comunicando usuário
-                if self.verbose >= 1:
-                    logger.debug(f'Tentativa número {i + 1} de reprocessamento')
-                    
+            for i in range(num_attempts):                    
                 # Iterando sobre requisições com falhas
+                logger.debug(f'Tentativa número {i + 1} de reprocessamento com timeout ajustado em + {timeout_increase}s')
                 for index, data in fail_requests.iterrows():
                     # Incrementando base de dados
                     gamelog_data = gamelog_data.append(self.player_gamelog_season(player_id=data['player_id'],
@@ -363,13 +359,9 @@ class NBAGamelog:
             
             # Laço infinito de iteração até que o número de erros seja 0
             i = 0
-            while True:
-                
-                # Comunicando usuário
-                if self.verbose >= 1:
-                    logger.debug(f'Tentativa número {i + 1} de reprocessamento')
-                    
+            while True:                    
                 # Iterando sobre requisições com falhas
+                logger.debug(f'Tentativa número {i + 1} de reprocessamento com timeout ajustado em + {timeout_increase}s')
                 for index, data in fail_requests.iterrows():
                     # Incrementando base de dados
                     gamelog_data = gamelog_data.append(self.player_gamelog_season(player_id=data['player_id'],
@@ -526,7 +518,7 @@ class NBAGamelog:
     
     # Retornando gamelog de um único jogador em uma única temporada (Regular + Playoffs)
     def player_gamelog_season_complete(self, player_id, season, season_types=['Regular Season', 'Playoffs'],
-                                       timeout=60):
+                                       timeout=60, player_log_key='full_name', reprocess=True, **kwargs):
         """
         Realiza múltiplas requições para extrair dados de um
         jogador considerando diferentes tipos de temporadas.
@@ -552,6 +544,41 @@ class NBAGamelog:
             Limite de tempo, em segundos, a ser considerado para
             cada requisição.
             [type: int, default=60]
+
+        **kwargs
+        --------
+        :arg error_strategy:
+            Define o tipo de estratégia a ser utilizada no reprocessamento
+            das requisições com falhas.
+            
+            *strategy='infinity': as tentativas de reprocessamento são
+            realizadas até que o sucesso completo seja obtido. Uma
+            observação plausível a ser feita é que, nesse modo, a 
+            execução do código pode demorar de forma incalculável.
+            
+            *strategy='attempts': é definido um limite de tentativas
+            de reprocessamento dos dados. Nessa abordagem, evita-se que
+            o codigo demande tempos elevados de execução, porém não
+            há a garantia que todos os dados serão retornados para
+            todos os jogadores.
+            
+            [type: string, default='infinity']
+            
+        :arg num_attempts:
+            Número de tentativas de reprocessamento em caso de 
+            error_strategy='attempts'. Ao final de cada tentativa,
+            a base de erros é atualizada e verificada. Em caso de
+            sucesso, a execução é interrompida. Caso as tentativas
+            se esgotem e ainda existam errors, os dados faltantes
+            são desconsiderados do retorno final.
+            [type: int, default=3]
+            
+        :arg timeout_increase:
+            Número inteiro utilizado para incrementar o timeout da
+            requisição a cada tentativa, propondo assim uma maior
+            tolerância e uma maior chance de retorno dos dados a 
+            cada nova requisição.
+            [type: int, default=5]
             
         Retorno
         -------
@@ -566,14 +593,30 @@ class NBAGamelog:
         
         # Inicializando variáveis de controle
         df_season_gamelog = pd.DataFrame()
+        player_log_id = self.player_identification(player_id=player_id, player_id_key=player_log_key)
 
         # Iterando sobre a lista de tipos de temporadas
+        #logger.debug(f'Extraindo dados de partidas de {player_log_id} na temporada {season}')
         for season_type in season_types:
             df_season_gamelog = df_season_gamelog.append(self.player_gamelog_season(player_id=player_id, 
                                                                                     season=season,
                                                                                     season_type_all_star=season_type,
                                                                                     timeout=timeout))
 
+        if reprocess and len(self.error_data) > 0:
+            logger.warning(f'Retorno incompleto para o jogador {player_log_id} na temporada {season}. Iniciando reprocessamento')
+            
+            # Extração de parâmetros de reprocessamento
+            error_strategy = kwargs['error_strategy'] if 'error_strategy' in kwargs else 'infinity'
+            num_attempts = kwargs['num_attempts'] if 'num_attempts' in kwargs else 3
+            timeout_increase = kwargs['timeout_increase'] if 'timeout_increase' in kwargs else 5
+            
+            # Atualizando DataFrame com novos dados após reprocessamento
+            df_season_gamelog = self.reprocess_error_requests(gamelog_data=df_season_gamelog, 
+                                                           error_strategy=error_strategy,
+                                                           num_attempts=num_attempts,
+                                                           timeout_increase=timeout_increase)
+                
         # Ordenando dados por data da partida e retornando DataFrame com índice ajustado
         df_season_gamelog.sort_values(by='GAME_DATE', ascending=False, inplace=True)
         
@@ -746,7 +789,7 @@ class NBAGamelog:
             except Exception as e:
                 attempts += 1
                 if attempts % 5 == 0:
-                    logger.warning(f'{attempts + 1} realizadas para extrair temporadas válidas de {player_log_id}')
+                    logger.warning(f'{attempts + 1} tentativas realizadas para extrair temporadas válidas de {player_log_id}')
                 continue
             
         # Iterando sobre todas as temporadas Regualres e Playoffs
