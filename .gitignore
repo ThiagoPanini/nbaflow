@@ -14,7 +14,7 @@ data/backup/
 data/*.hyper
 
 # Scripts dep rocessamento auxiliar paralelo
-scripts/tmp_parallel_run;
+scripts/tmp_parallel_run/
 
 # Tableau
 viz/
