@@ -37,6 +37,7 @@ import logging
 import os
 from os import makedirs
 from os.path import isdir
+import shutil
 
 
 """
@@ -248,8 +249,9 @@ def get_players_info(timeout=30, error_strategy='infinity', **kwargs):
 
 # Definindo função para extração e salvamento local de imagens de jogadores
 def get_players_images(static_url, img_format='.png', team_id_col='team_id', player_id_col='player_id',
-                       player_name_code_col='player_name_code', imgs_path=os.path.join(os.getcwd(), 'data', 'images'), 
-                       timeout=30, **kwargs):
+                       player_name_code_col='player_name_code', imgs_path='../data/images/', timeout=30, 
+                       assign_template_img=True, template_img_path=os.path.join(os.getcwd(), 'template_img.png'),
+                       **kwargs):
     
     """
     Realiza a extração de uma base de jogadores alvo que tiveram
@@ -306,9 +308,28 @@ def get_players_images(static_url, img_format='.png', team_id_col='team_id', pla
         [type: string, default='../images/']
     
     :param timeout:
-            Limite de tempo, em segundos, a ser considerado para
-            cada requisição.
-            [type: int, default=30]
+        Limite de tempo, em segundos, a ser considerado para
+        cada requisição.
+        [type: int, default=30]
+            
+    :param assign_template_img:
+        Define a designação de um template padrão para o jogador
+        caso sua imagem não seja encontrada no site (código de 
+        retorno da requisição diferente de 200). A imagem
+        template considera uma "sombra" genérica de um jogador
+        contendo uma interrogação ("?") no centro. Caso este
+        flag seja configurado como True, essa foto genérica
+        será salva com o nome do jogador cujo código retorno
+        da requisição obtido ser diferente de 200.
+        [type: bool, default=True]
+        
+    :param template_img_path:
+        Define o caminho padrão de armazenamento da imagem de
+        template a ser utilizada em casos de erros na requisição.
+        Ao validar o sucesso do código de retorno da requisição,
+        esse parâmetro é utilizado para buscar, ler e salvar
+        uma nova imagem para o jogador em questão.
+        [type: string, default=os.path.join(os.getcwd(), 'template_img.png']
     
     **kwargs
     --------
@@ -370,7 +391,7 @@ def get_players_images(static_url, img_format='.png', team_id_col='team_id', pla
         cuja requisição de imagens foi obtida com falha.
         [type: pd.DataFrame]
     """
-
+    
     # Extraindo argumentos adicionais para retorno de base alvo de jogadores
     error_strategy = kwargs['error_strategy'] if 'error_strategy' in kwargs else 'infinity'
     error_verbose = kwargs['error_verbose'] if 'error_verbose' in kwargs else 5
@@ -389,7 +410,7 @@ def get_players_images(static_url, img_format='.png', team_id_col='team_id', pla
     target_players['img_url'] = target_players.apply(lambda x: static_url.replace('team_id', str(x[team_id_col])).replace('player_id', str(x[player_id_col])) + img_format, axis=1)
     
     # Gerando referência de arquivo a ser salvo
-    target_players['player_name_img'] = target_players[player_name_code_col] + img_format
+    target_players['player_name_img'] = target_players[player_name_code_col].astype(str) + img_format
     
     # Definindo parâmetros de controle
     success, errors, i = 0, 0, 0
@@ -406,16 +427,21 @@ def get_players_images(static_url, img_format='.png', team_id_col='team_id', pla
         if img.status_code != 200:
             errors += 1
             fail_requests.append(row)
+            
+            # Copiando imagem template com nome do jogador
+            if assign_template_img:
+                shutil.copy(src=template_img_path, dst=imgs_path + row["player_name_img"])
+                
             continue
 
         # Salvando imagem em diretório local
         try:
-            with open(f'{os.path.join(imgs_path, row["player_name_img"])}', 'wb') as f:
+            with open(f'{imgs_path + row["player_name_img"]}', 'wb') as f:
                 f.write(img.content)
         except FileNotFoundError as fe:
             # Diretório não existente. Criando um e salvando arquivo
             os.makedirs(imgs_path)
-            with open(f'{os.path.join(imgs_path, row["player_name_img"])}', 'wb') as f:
+            with open(f'{imgs_path + row["player_name_img"]}', 'wb') as f:
                 f.write(img.content)
 
         # Comunicando usuário
