@@ -10,16 +10,22 @@
 
 ## Table of contents
 
-- [Introdução e Contexto](#introdução-e-contexto)
+- [Motivação e Contexto](#introdução-e-contexto)
 - [Cenários e Benchmarks](#cenários-e-benchmarks)
   - [NBA Stats](#nba-stats)
   - [NBA API](#nba-api)
   - [Visualizações](#visualizações)
   - [Cloud](#cloud)
+- [NBAFlow - Solução Integrada](#nbaflow---solução-integrada)
+- [Consumo da Solução](#consumo-da-solução)
+- [Painel Analítico - Tableau](#painel-analítico---tableau)
+- [Contatos](#contatos)
 
 ___
 
 ## Introdução e Contexto
+
+> 📌 Para ir direto ao desenvolvimento da solução proposta, é sugerido consumir essa documentação a partir do tópico **[NBAFlow - Solução Integrada](#nbaflow---solução-integrada)**
 
 Em linhas gerais, o projeto **NBA Flow** tem como premissa a construção de ferramentas de consumo, visualização e pipelines de transformação de dados utilizando estatísticas de jogadores e partidas da NBA extraídas dinamicamente a partir de requisição de APIs ou fontes centralizadas disponíveis publicamente.
 
@@ -90,3 +96,88 @@ Abaixo, seguem alguns exemplos de visualizações criadas por Kirk Goldsberry em
 Em uma quarta e última vertente, a análise de dados da NBA pode, eventualmente, proporcionar um viés extremamente positivo em relação ao uso de recursos da nuvem para propor pipelines completos de extração, tratamento e visualização de dados, permitindo assim explorar uma série de serviços e atividades em um contexto de aprendizagem.
 
 Considerando a idealização dos usuários em aprender novos conceitos de computação em nuvem, essa frente de trabalho pode ser um gatilho positivo para implementar soluções já considerando uma provedora cloud. Dessa forma, além de desenvolver estudos em contextos altamente interessantes para os usuários do projeto, será possível também aprender conceitos práticos sobre plataformas usualmente aplicadas em pipelines de dados.
+
+___
+
+## NBAFlow - Solução Integrada
+
+Após um vasto consumo da literatura e documentação disponíveis em fontes relacionadas, entende-se pelo projeto **NBAFlow** como ponto central para o desenvolvimento de fluxos e scripts de requisição e preparação de dados de modo a permitir a construção de visualizações dinâmicas envolvendo estatísticas da NBA. Como MVP, o diagrama de solução abaixo demonstra uma parcela dos entregáveis obtidos até o momento, sendo estes:
+
+* Classes e scripts Python capazes de coletar, preparar e transformar dados estatísticos da NBA;
+* Painel analítico e interativo construído no _Tableau_;
+
+<div align="center">
+    <br><img src="https://i.imgur.com/HMfAMMV.jpg" alt="nbaflow-c4">
+</div>
+
+___
+
+## Consumo da Solução
+
+Como mencionado anteriormente, a construção de toda a solução proposta tem como base a linguagem Python em conjunto com algumas bibliotecas disponibilizadas para fins específicos. Dessa forma, para utilizar os scripts desenvolvidos neste projeto, recomenda-se a execução das seguintes etapas:
+
+**_1. Criação e ativação de um ambiente virtual Python_**
+
+```bash
+# Criando e ativando venv no Linux
+$ python -m venv <path_venv>/<name_venv>
+$ source <path_venv>/<nome_venv>/bin/activate
+
+# Criando e ativando venv no Windows
+$ python -m venv <path_venv>/<name_venv>
+$ <path_venv>/<nome_venv>/Scripts/activate
+```
+
+**_2. Clone do repositório NBAFlow_**
+
+```bash
+git clone https://github.com/ThiagoPanini/nbaflow.git
+```
+
+**_3. Instalação das dependências do projeto via requirements.txt_**
+```
+# Navegando até o diretório do projeto e instalando pacotes
+cd nbaflow/
+pip install -r requirements.txt
+```
+
+**_4. Instalação do pacote/projeto em modo de edição_**
+> Isso permitirá a devida leitura de módulos internos dentro dos scripts já desenvolvidos
+```bash
+pip install -e .
+```
+
+**_5. [OPCIONAL] Execução de scripts já desenvolvidos para finalidades de estudo_**
+```bash
+pyhon scripts\player_gamelog.py
+```
+
+___
+
+## Painel Analítico - Tableau
+
+Como principal produto dentro desse projeto, encontra-se o [Painel Analítico de Estatística de Jogadores](https://public.tableau.com/views/NBAFlow-InsightsdeDadosdaNBA/PaineldeEstatsticasdeJogadores?:language=pt-BR&:display_count=n&:origin=viz_share_link) publicado e disponível no [Tableau Public](https://public.tableau.com/s/). Em resumo, trata-se de uma solução altamente refinada e construída sob as principais boas práticas de Data Viz, UX e UI com foco nos amantes do esporte e nos entusiastas de análise de dados.
+
+Como principais funcionalidades, o painel disponibilizado possui:
+
+* Menu principal e painel de estatística de jogadores com background disruptivo
+* Filtro dinâmico para visualização de indicadores de cada um dos jogadores ativos da liga
+* Imagem personalizada para cada jogador da liga de acordo com o filtro (isso foi trabalhoso!)
+* Dados agregados de todos os jogadores da liga em todas as temporadas jogadas
+* Farois dinâmicos e comparativos com as médias da liga
+* Interação dinâmica de dispersão de arremessos
+* Ranking de jogadores de acordo com atributos dinâmicos (rebotes, assistências, pontos, minutos, entre outros)
+* Muito mais...
+
+<div align="center">
+    <br><a href="https://public.tableau.com/app/profile/thiago.henrique.gomes.panini/viz/NBAFlow-InsightsdeDadosdaNBA/PaineldeEstatsticasdeJogadores"><img src="https://i.imgur.com/aHCg0qb.png" alt="nbaflow-tableau"></a>
+</div>
+
+<div align="center">
+    <br><a href="https://public.tableau.com/app/profile/thiago.henrique.gomes.panini/viz/NBAFlow-InsightsdeDadosdaNBA/PaineldeEstatsticasdeJogadores"><img src="https://i.imgur.com/sjlLqru.png" alt="nbaflow-tableau"></a>
+</div>
+
+## Contatos
+
+* LinkedIn: https://www.linkedin.com/in/thiago-panini/
+* Outras soluções desenvolvidas: https://github.com/ThiagoPanini
