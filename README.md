@@ -149,7 +149,7 @@ pip install -e .
 
 **_5. [OPCIONAL] Execução de scripts já desenvolvidos para finalidades de estudo_**
 ```bash
-pyhon scripts\player_gamelog.py
+pyhon scripts\one_player_gamelog.py
 ```
 
 ___
