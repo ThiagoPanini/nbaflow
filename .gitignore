@@ -9,6 +9,7 @@
 __pycache__
 
 # Arquivos de dados auxiliares
+auxiliar/*
 data/images/
 data/backup/
 data/*.hyper
