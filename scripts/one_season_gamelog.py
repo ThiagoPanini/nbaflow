@@ -111,8 +111,8 @@ def log_config(logger, level=logging.DEBUG,
     # Creating handlers
     if flag_file_handler:
         log_path = '/'.join(log_filepath.split('/')[:-1])
-        if not isdir(log_path):
-            makedirs(log_path)
+        if not os.path.isdir(log_path):
+            os.makedirs(log_path)
 
         # Adding file_handler
         file_handler = logging.FileHandler(log_filepath, mode=filemode, encoding='utf-8')
@@ -166,7 +166,7 @@ while True:
         continue
 
 # Gerando massa de testes com apenas alguns jogadores
-players_info = players_info.query('player_name in ("Damian Lillard", "Anthony Davis")')
+#players_info = players_info.query('player_name in ("Damian Lillard", "Anthony Davis")')
 
 
 """

@@ -35,8 +35,6 @@ import pandas as pd
 from datetime import datetime
 import logging
 import os
-from os import makedirs
-from os.path import isdir
 import shutil
 
 
@@ -82,8 +80,8 @@ def log_config(logger, level=logging.DEBUG,
     # Creating handlers
     if flag_file_handler:
         log_path = '/'.join(log_filepath.split('/')[:-1])
-        if not isdir(log_path):
-            makedirs(log_path)
+        if not os.path.isdir(log_path):
+            os.makedirs(log_path)
 
         # Adding file_handler
         file_handler = logging.FileHandler(log_filepath, mode=filemode, encoding='utf-8')
