@@ -56,7 +56,7 @@ PROJECT_PATH = os.getcwd()
 DATA_PATH = os.path.join(PROJECT_PATH, 'data')
 
 # Variáveis de filtro de temporada e colunas
-CURRENT_YEAR = datetime.now().year - 1
+CURRENT_YEAR = datetime.now().year
 SEASON_STR = str(CURRENT_YEAR - 1) + '-' + str(CURRENT_YEAR)[-2:]
 CURRENT_YEAR = str(CURRENT_YEAR)
 
