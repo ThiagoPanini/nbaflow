@@ -122,11 +122,26 @@ construção da consulta ao banco de dados considerando
 os filtros estabelecidos de jogador e temporada.
 """
 
+# Banner
+banner = """
+███╗   ██╗██████╗  █████╗ ███████╗██╗      ██████╗ ██╗    ██╗
+████╗  ██║██╔══██╗██╔══██╗██╔════╝██║     ██╔═══██╗██║    ██║
+██╔██╗ ██║██████╔╝███████║█████╗  ██║     ██║   ██║██║ █╗ ██║
+██║╚██╗██║██╔══██╗██╔══██║██╔══╝  ██║     ██║   ██║██║███╗██║
+██║ ╚████║██████╔╝██║  ██║██║     ███████╗╚██████╔╝╚███╔███╔╝
+╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝ 
+"""
+# Banner gerado pelo site: https://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=NBAflow
+
+# Iniciando programa
+print('-' * 62)
+print(banner)
+print('-' * 62)
+print('   Indicadores estatísticos de um jogador em uma temporada')
+print('-' * 62)
+
 # Coletando jogador alvo da análise
-print('-' * 57)
-print(' Indicadores estatísticos de um jogador em uma temporada')
-print('-' * 57)
-player_name = input('\nDigite o nome do jogador: \n')
+player_name = input('\nDigite o nome do jogador: \n').strip()
 #player_name = 'Damian Lillard'
 
 # Coletando temporada alvo da análise
