@@ -42,6 +42,9 @@ from datetime import datetime
 import os
 from dotenv import find_dotenv, load_dotenv
 
+# Biblioteca customizada para envio de e-mails
+from xchange_mail.mail import send_simple_mail
+
 # Logging
 import logging
 
@@ -112,11 +115,11 @@ logger = log_config(logger)
 """
 ---------------------------------------------------
 -------- 2. ESTATÍSTICA DE JOGADOR DA NBA ---------
-       2.1 Coleta de Parâmetros do usuário
+       2.1 Coleta de Parâmetros do Usuário
 ---------------------------------------------------
-Nesta task, o usuário fornece alguns parâmetros
-essenciais para a realização da consulta no
-banco de dados
+Preparação de variáveis fornecidas pelo usuário para
+construção da consulta ao banco de dados considerando
+os filtros estabelecidos de jogador e temporada.
 """
 
 # Coletando jogador alvo da análise
@@ -124,11 +127,13 @@ print('-' * 57)
 print(' Indicadores estatísticos de um jogador em uma temporada')
 print('-' * 57)
 player_name = input('\nDigite o nome do jogador: \n')
+#player_name = 'Damian Lillard'
 
 # Coletando temporada alvo da análise
 current_year = datetime.now().year
 season_ex = str(current_year - 1) + '-' + str(current_year)[-2:]
 season = input(f'\nDigite a temporada a ser analisada (ex: {season_ex}): \n')
+#season = '2019-20'
 print()
 
 # Validando input de temporada
@@ -142,10 +147,11 @@ if len(season) != 7:
 -------- 2. ESTATÍSTICA DE JOGADOR DA NBA ---------
   2.2 Construindo e executando consulta no banco
 ---------------------------------------------------
-Nesta task, será proposta a criação de uma instância
-de conexão ao banco de dados, a construção da query
-de consulta e a agregação dos indicadores estatíticos
-retornados em um formato DataFrame.
+Criação de string de consulta a ser utilizada no 
+retorno dos dados solicitados, instância de objeto
+de conexão ao banco de dados e execução da consulta
+para retorno de indicadores estatísticos de um jogador
+em uma temporada específica em formato DataFrame.
 """
 
 # Construindo query
@@ -200,3 +206,63 @@ player_stats = db.select_values(query, columns=result_columns)
 if player_stats is None:
     logger.error(f'Nenhum resultado retornado para os filtros de jogador {player_name} e season {season}')
     exit()
+
+
+"""
+---------------------------------------------------
+-------- 2. ESTATÍSTICA DE JOGADOR DA NBA ---------
+       2.3 Comunicando resultado via e-mail
+---------------------------------------------------
+
+"""
+
+# Verificando se usuário deseja receber o resultado por email
+flag_mail = int(input(f'\nDeseja receber os dados de {player_name} na season {season} por e-mail?\n[1] Sim\n[2] Não\n'))
+if flag_mail != 1:
+    logger.info('Programa encerrado')
+    exit()
+else:
+    # Coletando e validando e-mail de destino (forma básica)
+    mail_to = input(f'\nInsira o e-mail de destino (em caso de mais de um, separar por ";"):\n')
+    while True:
+        if ';' in mail_to:
+            mail_to_errors = [mail for mail in mail_to.split(';') if mail.count('@') != 1 or '.com' not in mail]
+            if len(mail_to_errors) > 0:
+                mail_to = input(f'\nUm ou mais e-mails fornecidos foram caracterizados como inválidos ({mail_to_errors}). Por favor, tente novamente:\n')
+            else:
+                break           
+        elif mail_to.count('@') != 1 or '.com' not in mail_to:
+            mail_to = input(f'\nE-mail {mail_to} inválido. Por favor, tente novamente: \n')
+        else:
+            break
+
+    # Extraindo valores de envio do owner a partir de variáveis de ambiente
+    logger.debug('Coletando parâmetros e enviando e-mail com as estatísticas extraídas')
+    MAIL_FROM = os.getenv('MAIL_FROM')
+    MAIL_PWD = os.getenv('MAIL_PWD')
+    MAIL_SERVER = 'outlook.office365.com'
+    MAIL_BOX = os.getenv('MAIL_BOX')
+    MAIL_TO = [mail_to]
+    MAIL_BODY = f"""
+        Conforme solicitado, a tabela abaixo contém dados estatísticos de performance do jogador {player_name} na temporada {season}\n\n
+    """
+
+    # Enviando e-mail
+    try:
+        send_simple_mail(username=MAIL_FROM,
+                        password=MAIL_PWD,
+                        server=MAIL_SERVER,
+                        mail_box=MAIL_BOX,
+                        mail_to=MAIL_TO,
+                        mail_body=MAIL_BODY,
+                        df=player_stats,
+                        df_on_body=True,
+                        df_on_attachment=True,
+                        attachment_filename=f'{player_name}_{season.replace("-", "_")}_stats.csv',
+                        subject=f'[NBAFlow] Estatísticas de {player_name} na temporada {season}')
+        logger.info(f'E-mail com estatísticas de {player_name} na temporada {season} enviado com sucesso. Programa encerrado.')
+    except Exception as e:
+        logger.error(f'Erro ao enviar e-mail. Exception: {e}')
+        exit()
+    
+    
