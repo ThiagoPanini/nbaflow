@@ -236,6 +236,7 @@ if player_stats is None:
 # Verificando se usuário deseja receber o resultado por email
 flag_mail = int(input(f'\nDeseja receber os dados de {player_name} na season {season} por e-mail?\n[1] Sim\n[2] Não\n'))
 if flag_mail != 1:
+    print(f'\n{player_stats}\n')
     logger.info('Programa encerrado')
     exit()
 else:
