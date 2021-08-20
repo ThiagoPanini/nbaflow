@@ -37,12 +37,18 @@ reqs = [str(ir.req) for ir in install_reqs]"""
 # Criando setup
 setup(
     name='nbaflow',
-    version='0.0.1',
+    version='0.0.2',
     author='Thiago Panini',
     author_email='thipanini94@gmail.com',
     packages=find_packages(),
     install_requires=[
-        'pandas'
+        'pandas',
+        'numpy',
+        'python-dotenv',
+        'nba_api',
+        'psycopg2-binary',
+        'sqlalchemy',
+        'xchange_mail'
     ],
     license='MIT',
     description='Solução integrada para exploração de dados da NBA utilizando API pública e pacotes python para construção de pipelines, realização de análises estatísticas e visuais.',
