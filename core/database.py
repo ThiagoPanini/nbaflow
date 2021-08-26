@@ -182,7 +182,36 @@ class DatabaseConnection:
                     
         except Exception as e:
             logger.error(f'Erro ao conectar ao banco de dados. Exception: {e}')
+            exit()
             
+    # Mostrando tabelas existentes no banco de dados
+    def show_tables(self):
+        """
+        Método responsável por listar todas as tabelas presentes
+        no banco de dados a partir do comando
+        SELECT tablename FROM pg_catalog.pg_tables
+
+        O resultado é fornecido em um formato DataFrame ao 
+        usuário final.
+
+        Retorno
+        -------
+        :return tables:
+            DataFrame contendo uma única coluna com todas as
+            referências de tabelas encontradas no banco.
+            [type: pd.DataFrame]
+        """
+
+        # Criando e executando query a partir de uma conexão existente
+        query = 'SELECT tablename FROM pg_catalog.pg_tables'
+        with self.conn.cursor() as cur:
+            cur.execute(query)
+            tables = pd.DataFrame(cur.fetchall())
+            tables.columns = ['tablename']
+            logger.info(f'Foram encontradas {len(tables)} tabelas no banco de dados')
+
+        return tables
+    
     # Executando queries através de uma conexão
     def execute_query(self, query):
         """
@@ -282,7 +311,7 @@ class DatabaseConnection:
                     logger.info(f'Comando CREATE TABLE {table} executado com sucesso')
         
         except Exception as e:
-            logger.error(f'Erro ao criar tabela a partir do DataFrame. Exception: {e}')
+            logger.warning(f'Erro ao criar tabela a partir do DataFrame. Exception: {e}')
             self.conn.rollback()
     
     # Ingestão via psycopg2 utilizando o método execute_values()
@@ -324,7 +353,7 @@ class DatabaseConnection:
                 if self.verbose:
                     logger.info(f'{len(df)} registros inseridos na tabela {table}')
             except (Exception, psycopg2.DatabaseError) as e:
-                print(f'Erro ao realizar ingestão. Exception: {e}')
+                logger.warning(f'Erro ao realizar ingestão. Exception: {e}')
                 self.conn.rollback()
     
     # Retornando valores de uma tabela
@@ -371,6 +400,6 @@ class DatabaseConnection:
                 return df_rs
             
         except Exception as e:
-            logger.error(f'Erro ao consultar dados. Exception: {e}')
+            logger.warning(f'Erro ao consultar dados. Exception: {e}')
             self.conn.rollback()
     
