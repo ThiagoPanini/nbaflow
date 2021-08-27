@@ -176,7 +176,7 @@ logger.info(f'Upload de {len(os.listdir(IMGS_PATH))} imagens realizado com suces
 
 # Realizando o upload de todos os arquivos em um diretório raíz
 jbuckets.s3_resource.Bucket(BUCKET_NAME).objects.all().delete()
-upload_files_in_dir(
+jbuckets.upload_files_in_dir(
     directory=DATA_PATH,
     bucket_name=BUCKET_NAME
 )
