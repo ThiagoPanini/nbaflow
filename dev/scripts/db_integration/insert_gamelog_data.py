@@ -46,6 +46,9 @@ import pandas as pd
 import os
 from dotenv import find_dotenv, load_dotenv
 
+# Classe customizada para operações com s3 e boto3
+from utils.aws.s3 import JimmyBuckets
+
 # Logging
 import logging
 
@@ -118,6 +121,14 @@ DATA_PATH = os.path.join(PROJECT_PATH, 'dev/data')
 FILENAME = 'all_players_gamelog.csv'
 DB_TABLE = 'nba_players_gamelog'
 
+# Definindo variáveis de coleta de dados no s3
+S3_BUCKET = 'nbaflow-files'
+S3_FILE_KEY = 'all_players_gamelog.csv'
+REGION = 'sa-east-1'
+
+# Variável de leitura dos dados ("s3" ou "local")
+DATA_SOURCE = 's3'
+
 
 """
 ---------------------------------------------------
@@ -143,15 +154,22 @@ banner = """
 print('-' * 62)
 print(banner)
 print('-' * 62)
-print('   Ingestão de histórico pré-processado de partidas da NBA')
+print('Ingestão de histórico pré-processado de partidas da NBA')
 print('-' * 62)
 
-# Lendo arquivo
-try:
-    df = pd.read_csv(os.path.join(DATA_PATH, FILENAME))
-    logger.info(f'Arquivo de histórico de partidas da NBA lido com sucesso. Dimensões: {df.shape}')
-except Exception as e:
-    logger.error(f'Erro ao ler arquivo {FILENAME}. Exception: {e}')
+# Lendo arquivo de acordo com a fonte selecionada (s3 ou local)
+if DATA_SOURCE == 's3':
+    jbuckets = JimmyBuckets(region=REGION)
+    df = jbuckets.object_to_df(bucket_name=S3_BUCKET, key=S3_FILE_KEY, encoding='utf-8')
+elif DATA_SOURCE == 'local':
+    try:
+        df = pd.read_csv(os.path.join(DATA_PATH, FILENAME))
+        logger.info(f'Arquivo de histórico de partidas da NBA lido com sucesso. Dimensões: {df.shape}')
+    except Exception as e:
+        logger.error(f'Erro ao ler arquivo {FILENAME}. Exception: {e}')
+        exit()
+else:
+    logger.error(f'Variável DATA_SOURCE {DATA_SOURCE} inválida. Selecione entre "s3" ou "local" para origem dos dados')
     exit()
 
 
