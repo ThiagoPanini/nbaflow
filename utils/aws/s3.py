@@ -39,6 +39,8 @@ from botocore.exceptions import ClientError
 
 # Bibliotecas padrão
 import os
+import pandas as pd
+from io import BytesIO
 
 # Logging
 import logging
@@ -165,11 +167,8 @@ class JimmyBuckets():
         Parâmetros
         ----------
         :param bucket_name:
-            Referência do bucket a ser criado dentro da conta
-            AWS configurada para a utilização do boto3. O nome
-            do bucket deve seguir as diretrizes propostas pela
-            própria AWS dentro das boas práticas e restrições
-            estabelecidas.
+            Referência do bucket a ser utilizada dentro da 
+            proposta de execução do método.
             [type: string]
             
         :param acl:
@@ -217,7 +216,7 @@ class JimmyBuckets():
                 ACL=acl,
                 CreateBucketConfiguration=location
             )
-            logger.info(f'Bucket {bucket_name} criado com sucesso.')
+            logger.info(f'Bucket {bucket_name} criado com sucesso')
 
         except (self.s3_client.exceptions.BucketAlreadyExists, self.s3_client.exceptions.BucketAlreadyOwnedByYou) as e:
             logger.warning(f'Bucket {bucket_name} já existente. A criação de um novo bucket não será realizada. Exception: {e}')
@@ -260,11 +259,8 @@ class JimmyBuckets():
         Parâmetros
         ----------
         :param bucket_name:
-            Referência do bucket a ser criado dentro da conta
-            AWS configurada para a utilização do boto3. O nome
-            do bucket deve seguir as diretrizes propostas pela
-            própria AWS dentro das boas práticas e restrições
-            estabelecidas.
+            Referência do bucket a ser utilizada dentro da 
+            proposta de execução do método.
             [type: string]
 
         :param empty_bucket:
@@ -300,11 +296,11 @@ class JimmyBuckets():
             bucket_objects = [obj for obj in bucket.objects.all()]
             if len(bucket_objects) > 0 and empty_bucket:            
                 # Esvaziando e deletando bucket
-                logger.warning(f'O bucket {bucket_name} possui {len(bucket_objects)} objetos. Esvaziando bucket e tentando delete novamente.')
+                logger.warning(f'O bucket {bucket_name} possui {len(bucket_objects)} objetos. Esvaziando bucket e tentando delete novamente')
                 try:
                     bucket.objects.all().delete()
                     bucket.delete()
-                    logger.info(f'Bucket {bucket_name} deletado com sucesso.')
+                    logger.info(f'Bucket {bucket_name} deletado com sucesso')
                 except Exception as e:
                     logger.error(f'Erro ao esvaziar e deletar bucket {bucket_name}. Exception: {e}')
             else:
@@ -312,7 +308,7 @@ class JimmyBuckets():
                 logger.error(f'Erro ao deletar bucket {bucket_name}. O bucket possui {len(bucket_objects)} e o parâmetro "empty_bucket" é igual a False. Exception: {ce}')
             
     # Realizando upload de arquivos para buckets s3
-    def upload_object(self, file, bucket_name, key, 
+    def upload_object(self, file, bucket_name, key,
                       method='put_object', verbose=True):
         
         """
@@ -339,11 +335,8 @@ class JimmyBuckets():
             [type: string or buffer]
 
         :param bucket_name:
-            Referência do bucket a ser criado dentro da conta
-            AWS configurada para a utilização do boto3. O nome
-            do bucket deve seguir as diretrizes propostas pela
-            própria AWS dentro das boas práticas e restrições
-            estabelecidas.
+            Referência do bucket a ser utilizada dentro da 
+            proposta de execução do método.
             [type: string]
             
         :param key:
@@ -376,7 +369,8 @@ class JimmyBuckets():
         if method == 'put_object':
             # Realizando upload de stream binária já em buffer
             try:
-                self.s3_client.put_object(Bucket=bucket_name, Body=file, Key=key)
+                with open(file, 'rb') as f:
+                    self.s3_client.put_object(Bucket=bucket_name, Body=f, Key=key)
             except Exception as e:
                 logger.error(f'Erro ao realizar upload via client.put_object(). Exception: {e}')
                 return None
@@ -430,11 +424,8 @@ class JimmyBuckets():
             [type: string]
 
         :param bucket_name:
-            Referência do bucket a ser criado dentro da conta
-            AWS configurada para a utilização do boto3. O nome
-            do bucket deve seguir as diretrizes propostas pela
-            própria AWS dentro das boas práticas e restrições
-            estabelecidas.
+            Referência do bucket a ser utilizada dentro da 
+            proposta de execução do método.
             [type: string]
 
         :param folder_prefix:
@@ -483,7 +474,7 @@ class JimmyBuckets():
         # Levantando parâmetros
         if outer_verbose:
             total_objects = len([name for _, _, files in os.walk(directory) for name in files])
-            logger.debug(f'Iniciando upload para os {total_objects} objetos encontrados no diretório alvo')
+            logger.debug(f'Iniciando upload dos {total_objects} objetos encontrados no diretório alvo')
 
         # Navegando por todos os arquivos em um diretório
         for path, dirs, files in os.walk(directory):
@@ -502,6 +493,144 @@ class JimmyBuckets():
         if outer_verbose:
             logger.info(f'Fim do processo de upload dos objetos encontrados no diretório')
     
+    # Lendo objetos no s3 e transformando em DataFrame
+    def object_to_df(self, bucket_name, key, encoding='utf-8'):
+        """
+        Método criado para a coleta de um objeto no s3 seguida
+        da transformação em um DataFrame do pandas. Com esse
+        método, o usuário pode fornecer uma chave específica
+        de um objeto armazenado em um bucket e obter o resultado
+        direto em um DataFrame, facilitando tratativas e análises
+        posteriores. A transferência ocorre a partir da resposta
+        obtida através da execução do método client.get_object(),
+        onde é feita um armazenamento em buffer de bytes para a
+        devida leitura via pd.read_csv(). Neste cenário, é 
+        importante citar que este método funciona bem para objetos
+        do tipo .csv ou .txt legíveis pela função de leitura
+        do pandas. Outros objetos que eventualmente diferem 
+        destes formatos podem gerar falhas de execução.
+        
+        Parâmetros
+        ----------
+        :param bucket_name:
+            Referência do bucket a ser utilizada dentro da 
+            proposta de execução do método.
+            [type: string]
+            
+        :param key:
+            Chave de armazenamento do objeto no s3.
+            [type: string]
+
+        :param encoding:
+            Tipo de encoding utilizado na leitura do buffer
+            do stream de dados armazenado.
+            [type: string, default="utf-8"]
+        """
+        
+        logger.debug(f'Coletando objeto {key} do bucket {bucket_name} e transformando em DataFrame')
+        try:
+            obj = self.s3_client.get_object(Bucket=bucket_name, Key=key)
+            data_stream = BytesIO(obj['Body'].read())
+            df = pd.read_csv(data_stream, encoding=encoding)
+            logger.info(f'Objeto {key} coletado com sucesso. Dimensões do DataFrame resultante: {df.shape}')
+            return df
+        
+        except self.s3_client.exceptions.NoSuchKey as nske:
+            logger.error(f'Erro ao coletar objeto {key} por erro de chave inválida. Exception: {nske}')
+            return None
+
+        except UnicodeDecodeError as ude:
+            logger.error(f'Erro de codificação do objeto {key} na leitura em DataFrame. Verifique se o objeto é um arquivo em formato csv ou txt. Exception: {ude}')
+            return None
+
+        except ClientError as ce:
+            logger.error(f'Erro de client ao coletar objeto. Exception: {ce}')
+            return None
+
+    # Baixando todos os objetos de um bucket mantendo a estrutura local
+    def download_all_objects(self, bucket_name, prefix='', verbose=True, **kwargs):
+        """
+        Método criado para o download de todos os objetos
+        listados em um determinado bucket com a opção de 
+        filtrar um prefixo específico. Como feature adicional,
+        toda a estrutura de prefixos (diretórios) do bucket
+        selecionado é mantida localmente a partir do retorno
+        dos prefixos e criação de diretórios locais a partir
+        de um caminho inicial fornecido pelo parâmetro
+        "local_dir" deste método.
+
+        Em outras palavras, ao apontar pra um determinado
+        bucket e selecionar um determinado prefixo, toda
+        sua estrutura é espelhada localmente a partir da
+        criação de novos diretórios capazes de receber
+        todos os objetos/arquivos baixados do bucket.
+        
+        Parâmetros
+        ----------
+        :param bucket_name:
+            Referência do bucket a ser utilizada dentro da 
+            proposta de execução do método.
+            [type: string]
+            
+        :param prefix:
+            Prefixo ou "subdiretório" a ser utilizado como
+            filtro na busca dos arquivos a serem baixados
+            dentro de um determinado bucket. Por padrão,
+            este argumento é configurado como uma string
+            vazia para que, dessa forma, a varredura de 
+            objetos seja feita utilizando o próprio bucket
+            como raíz.
+            [type: string, default='']
+
+        :param verbose:
+            Flag de verbosidade para logs aplicados durante
+            as tratativas de upload de objetos no método.
+            [type: bool, default=True]
+
+        Argumentos Adicionais
+        ---------------------
+        :kwarg local_dir:
+            Diretório local de destino de toda a estrutura
+            do bucket, incluindo subdiretórios e arquivos.
+            Caso o usuário não passe explicitamente este
+            argumento, o diretório raíz de download da 
+            estrutura do bucket é definido como sendo o 
+            diretório atual de trabalho contando com uma
+            pasta com o nome do bucket alvo.
+            [type: string, 
+             default=os.path.join(os.getcwd(), bucket_name)]
+        """
+
+        # Estrutura do bucket
+        logger.debug(f'Coletando estrutura completa do bucket {bucket_name} incluindo chaves e prefixos')
+        bucket = self.s3_resource.Bucket(bucket_name)
+        keys = [obj.key for obj in bucket.objects.filter(Prefix=prefix)]
+        prefixes = sorted(list(dict.fromkeys([os.path.dirname(k) for k in keys if '/' in k])))
+        local_dir = kwargs['local_dir'] if 'local_dir' in kwargs else os.path.join(os.getcwd(), bucket_name)
+
+        # Estrutura local
+        logger.debug(f'Preparando estrutura local com os prefixos obtidos')
+        for dirname in prefixes:
+            try:
+                local_path = os.path.join(local_dir, dirname)
+                if not os.path.isdir(local_path):
+                    os.makedirs(local_path)
+            except Exception as e:
+                logger.warning(f'Erro ao criar diretório {dirname}. Exception: {e}')
+        
+        # Download dos objetos
+        logger.debug(f'Realizando download dos objetos listados na estrutura local criada')
+        i = 0
+        for k in keys:
+            try:
+                self.s3_client.download_file(bucket_name, k, os.path.join(local_dir, k))
+                i += 1
+            except Exception as e:
+                if verbose:
+                    logger.error(f'Erro ao realizar o donwload do objeto {k}. Exception: {e}')
+
+        logger.info(f'Download de {i} dos {len(keys)} objetos listados em {local_dir}. Efetividade de {100*round(i/len(keys), 0)}%')
+
 
 """
 ---------------------------------------------------
@@ -711,9 +840,8 @@ def delete_bucket(bucket_name, region=REGION, empty_bucket=False,
             logger.error(f'Erro ao deletar bucket {bucket_name}. O bucket possui {len(bucket_objects)} e o parâmetro "empty_bucket" é igual a False. Exception: {ce}')
         
 # Realizando upload de arquivos para buckets s3
-def upload_object(file, bucket_name, key, region=REGION, 
-                  method='put_object', s3_client=None, verbose=True):
-    
+def upload_object(file, bucket_name, key, region=REGION, method='put_object', 
+                  s3_client=None, verbose=True):
     """
     Função criada para encapsular as ações relacionadas ao 
     upload de objetos em um bucket s3 utilizando o SDK boto3.
@@ -789,7 +917,8 @@ def upload_object(file, bucket_name, key, region=REGION,
     if method == 'put_object':
         # Realizando upload de stream binária já em buffer
         try:
-            s3_client.put_object(Bucket=bucket_name, Body=file, Key=key)
+            with open(file, 'rb') as f:             
+                s3_client.put_object(Bucket=bucket_name, Body=f, Key=key)
         except Exception as e:
             logger.error(f'Erro ao realizar upload via client.put_object(). Exception: {e}')
             return None
@@ -927,4 +1056,3 @@ def upload_files_in_dir(directory, bucket_name, folder_prefix='',
 
     if outer_verbose:
         logger.info(f'Fim do processo de upload dos objetos encontrados no diretório')
-
