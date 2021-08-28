@@ -131,6 +131,7 @@ BUCKET_NAME = 'nbaflow-files'
 DROP_EXISTENT = True
 DATA_FOLDER = 'data/'
 IMGS_FOLDER = 'imgs/'
+LOCAL_DIR_BUCKET_DOWNLOAD = os.path.join(PROJECT_PATH, 'tmp')
 
 
 """
@@ -139,6 +140,24 @@ IMGS_FOLDER = 'imgs/'
         2.1 Criando e configurando bucket
 ---------------------------------------------------
 """
+
+# Banner
+banner = """
+███╗   ██╗██████╗  █████╗ ███████╗██╗      ██████╗ ██╗    ██╗
+████╗  ██║██╔══██╗██╔══██╗██╔════╝██║     ██╔═══██╗██║    ██║
+██╔██╗ ██║██████╔╝███████║█████╗  ██║     ██║   ██║██║ █╗ ██║
+██║╚██╗██║██╔══██╗██╔══██║██╔══╝  ██║     ██║   ██║██║███╗██║
+██║ ╚████║██████╔╝██║  ██║██║     ███████╗╚██████╔╝╚███╔███╔╝
+╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝ 
+"""
+# Banner gerado pelo site: https://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=NBAflow
+
+# Iniciando programa
+print('-' * 62)
+print(banner)
+print('-' * 62)
+print('Gerenciamento de buckets s3 e ingestão de objetos via boto3')
+print('-' * 62)
 
 logger.debug(f'Instanciando classe JimmyBuckets e configurando ambiente s3')
 jbuckets = JimmyBuckets(region=REGION)
@@ -179,5 +198,21 @@ jbuckets.s3_resource.Bucket(BUCKET_NAME).objects.all().delete()
 jbuckets.upload_files_in_dir(
     directory=DATA_PATH,
     bucket_name=BUCKET_NAME
+)
+
+
+"""
+---------------------------------------------------
+-------- 2. GERENCIANDO BUCKETS E OBJETOS ---------
+       2.3 Realizando o download de objetos
+---------------------------------------------------
+"""
+
+# Baixando todos os objetos de um bucket, incluindo sua estrutura
+jbuckets.download_all_objects(
+    bucket_name=BUCKET_NAME,
+    prefix='',
+    local_dir=LOCAL_DIR_BUCKET_DOWNLOAD,
+    verbose=True
 )
 
