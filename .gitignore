@@ -13,6 +13,7 @@ auxiliar/*
 dev/data/images/
 dev/data/backup/
 dev/data/*.hyper
+tmp/
 
 # Scripts dep rocessamento auxiliar paralelo
 dev/scripts/data_generation/tmp_parallel_run/
