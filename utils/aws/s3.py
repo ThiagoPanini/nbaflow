@@ -392,7 +392,7 @@ class JimmyBuckets():
             logger.info(f'Upload do objeto {key} realizado com sucesso no bucket {bucket_name}')
 
     # Realizando upload de todos os arquivos em um diretório local
-    def upload_files_in_dir(self, directory, bucket_name, folder_prefix='',
+    def upload_directory(self, directory, bucket_name, folder_prefix='',
                             method='put_object', inner_verbose=False, outer_verbose=True):
         """
         Método criado para com o objetivo de encapsular múltiplas
@@ -493,8 +493,68 @@ class JimmyBuckets():
         if outer_verbose:
             logger.info(f'Fim do processo de upload dos objetos encontrados no diretório')
     
+    # Lendo objeto direto do s3
+    def read_object(self, bucket_name, key, verbose=True):
+        """
+        Método criado para a coleta de um objeto no s3 em um
+        stream binário de bytes. Na prática, este método atua
+        como um facilitador dentro da aplicação do método
+        client.get_object de um client s3 instanciado. De
+        forma adicional, outros métodos da classe JimmyBuckets
+        podem utilizar deste método para implementações 
+        específicas de leitura de objetos como, por exemplo, a
+        leitura de um objeto em um bucket direto em um formato
+        DataFrame.
+
+        Parâmetros
+        ----------
+        :param bucket_name:
+            Referência do bucket a ser utilizada dentro da 
+            proposta de execução do método.
+            [type: string]
+            
+        :param key:
+            Chave de armazenamento do objeto no s3.
+            [type: string]
+
+        :param verbose:
+            Flag de verbosidade para logs aplicados durante
+            as tratativas de upload de objetos no método.
+            [type: bool, default=True]
+
+        Retorno
+        -------
+        :return data_stream:
+            Stream de dados referente ao objeto lido do bucket.
+            Na prática, o método entrega o conteúdo da chave
+            ['Body'] do elemento resultante do método 
+            client.get_object() do boto3. O resultado é entregue
+            em um formato de bytes através da leitura do conteúdo
+            originalmente entregue em um formato identificado por
+            botocore.response.StreamingBody.
+            Eventualmente, o conteúdo em bytes pode ser transformado
+            em um streaming de dados a partir da utilização de um
+            buffer (StringIO ou BytesIO).
+            [type: bytes]
+        """
+
+        try:
+            obj = self.s3_client.get_object(Bucket=bucket_name, Key=key)
+            data = obj['Body'].read()
+            if verbose:
+                logger.info(f'Objeto {key} lido com sucesso e transformado em bytes')
+            return data
+        
+        except self.s3_client.exceptions.NoSuchKey as nske:
+            logger.error(f'Erro ao coletar objeto {key} por erro de chave inválida. Exception: {nske}')
+            return None
+
+        except ClientError as ce:
+            logger.error(f'Erro de client ao coletar objeto. Exception: {ce}')
+            return None
+
     # Lendo objetos no s3 e transformando em DataFrame
-    def object_to_df(self, bucket_name, key, encoding='utf-8'):
+    def object_to_df(self, bucket_name, key, encoding='utf-8', verbose=True):
         """
         Método criado para a coleta de um objeto no s3 seguida
         da transformação em um DataFrame do pandas. Com esse
@@ -525,14 +585,28 @@ class JimmyBuckets():
             Tipo de encoding utilizado na leitura do buffer
             do stream de dados armazenado.
             [type: string, default="utf-8"]
+
+        :param verbose:
+            Flag de verbosidade para logs aplicados durante
+            as tratativas de upload de objetos no método.
+            [type: bool, default=True]
+        
+        Retorno
+        -------
+        :return df:
+            DataFrame do pandas gerado a partir da utilização
+            de um buffer BytesIO para armazenamento dos dados
+            em bytes lidos a partir da execução do método
+            self.read_object() desta classe.
+            [type: pd.DataFrame]
         """
         
         logger.debug(f'Coletando objeto {key} do bucket {bucket_name} e transformando em DataFrame')
         try:
-            obj = self.s3_client.get_object(Bucket=bucket_name, Key=key)
-            data_stream = BytesIO(obj['Body'].read())
-            df = pd.read_csv(data_stream, encoding=encoding)
-            logger.info(f'Objeto {key} coletado com sucesso. Dimensões do DataFrame resultante: {df.shape}')
+            data = self.read_object(bucket_name=bucket_name, key=key, verbose=verbose)
+            df = pd.read_csv(BytesIO(data), encoding=encoding)
+            if verbose:
+                logger.info(f'Objeto {key} coletado com sucesso. Dimensões do DataFrame resultante: {df.shape}')
             return df
         
         except self.s3_client.exceptions.NoSuchKey as nske:
@@ -540,7 +614,7 @@ class JimmyBuckets():
             return None
 
         except UnicodeDecodeError as ude:
-            logger.error(f'Erro de codificação do objeto {key} na leitura em DataFrame. Verifique se o objeto é um arquivo em formato csv ou txt. Exception: {ude}')
+            logger.error(f'Erro de codificação do objeto {key}. Verifique se o objeto é um arquivo em formato csv ou txt válido. Exception: {ude}')
             return None
 
         except ClientError as ce:
