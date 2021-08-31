@@ -46,8 +46,7 @@ from utils.aws.s3 import JimmyBuckets
 import os
 
 # Gerenciamento de e-mails
-from exchangelib import Credentials, Account, Configuration, Message, DELEGATE, \
-                        FileAttachment, HTMLBody
+import jaiminho.exchange as jex
 
 # Logging
 import logging
@@ -172,7 +171,7 @@ print()
 """
 ---------------------------------------------------
 --- 2. COLETANDO IMAGEM DE JOGADOR EM BUCKET S3 ---
-           2.2 Coletando imagem no bucket
+          2.2 Coletando imagem no bucket
 ---------------------------------------------------
 """
 
@@ -182,53 +181,21 @@ jbuckets = JimmyBuckets(region=REGION)
 # Montando chave de pesquisa e coletando imagem em bytes
 player_key = FOLDER_PREFIX + player_name + '.png'
 player_img = jbuckets.read_object(bucket_name=BUCKET_NAME, key=player_key)
+filename = player_name + '.png'
 
-
-"""
----------------------------------------------------
---- 2. COLETANDO IMAGEM DE JOGADOR EM BUCKET S3 ---
-    2.3 Configurando e-mail e enviando imagem
----------------------------------------------------
-"""
-
-# Coletando credenciais do usuário
-creds = Credentials(
-    username=MAIL_FROM,
-    password=os.getenv('MAIL_PWD')
-)
-
-# Configurando servidor
-config = Configuration(
-    credentials=creds,
-    server=MAIL_SERVER
-)
-
-# Criando e configurando conta
-account = Account(
-    primary_smtp_address=MAIL_BOX,
-    credentials=creds,
-    config=config,
-    autodiscover=False,
-    access_type=DELEGATE
-)
-
-# Criando mensagem
-msg = Message(
-    account=account,
-    subject=MAIL_SUBJECT,
-    to_recipients=mail_to
-)
-
-# Anexando imagem no corpo do e-mail
-print(type(player_img))
-print(player_img)
-exit()
-img = FileAttachment(
-    name=player_name + '.png',
-    content=player_img,
-    is_inline=True
-)
-msg.attach(img)
-
-# Enviando imagem
-msg.send_and_save()
+# Enviando e-mail
+try:
+    jex.send_mail(
+        username=MAIL_FROM,
+        password=os.getenv('MAIL_PWD'),
+        server=MAIL_SERVER,
+        mail_box=MAIL_BOX,
+        mail_to=[mail_to],
+        subject=f'Imagem de {player_name} coletada de bucket s3',
+        body=f'<img src="cid:{filename}">',
+        zip_attachments=zip([filename], [player_img])
+    )
+    logger.info(f'E-mail com imagem do jogador {player_name} enviado com uscesso por e-mail')
+except Exception as e:
+    logger.error(f'Erro ao enviar imagem por e-mail. Exception: {e}')
+    exit()
