@@ -35,14 +35,14 @@ Table of Contents
 
 # Recursos para operações na AWS
 from cloudgeass.aws.serverless import build_lambda_layer
-import pathlib
+import shutil
 
 # Bibliotecas padrão
 import os
 
 # Logging
 import logging
-from utils.log import log_config
+from nbaflow.utils.log import log_config
 
 
 """
@@ -57,13 +57,14 @@ logger = logging.getLogger(__file__)
 logger = log_config(logger)
 
 # Definindo parâmetros de diretório
-PROJECT_PATH = os.getcwd()
-LAYER_PATH = os.path.join(PROJECT_PATH, 'aws\\lambda\\layers')
-REQUIREMENTS_FILE = os.path.join(PROJECT_PATH, 'requirements.txt')
+LAYER_ROOT_PATH = 'aws\\lambda'
+LAYER_NAME = 'nbaflow_layer'
+RUNTIME_FOLDER = 'python'
+TARGET_PATH = os.path.join(LAYER_ROOT_PATH, LAYER_NAME, RUNTIME_FOLDER)
 
 # Definindo parâmetros de armazenamento no s3
 LAYER_BUCKET = 'lambda-layers-paninit'
-LAYER_PREFIX = 'nbaflow_layer/'
+LAYER_KEY = 'nbaflow_layer/python.zip'
 
 
 """
@@ -74,10 +75,22 @@ LAYER_PREFIX = 'nbaflow_layer/'
 """
 
 # Chamando função para criação do layer
+if os.path.isdir(LAYER_ROOT_PATH):
+    shutil.rmtree(LAYER_ROOT_PATH)
+
 build_lambda_layer(
+    target_path=TARGET_PATH,
+    bucket_name=LAYER_BUCKET,
+    key=LAYER_KEY,
+    packages_from='list',
+    packages_list=['nba_api', 'psycopg2', 'psycopg2-binary', 'pandas', 'boto3',
+                   'cloudgeass', 'jaiminho']
+)
+
+"""build_lambda_layer(
     layer_path=LAYER_PATH,
     bucket_name=LAYER_BUCKET,
     prefix=LAYER_PREFIX,
-    type_get_package='manual',
+    type_get_package='li',
     requirements_path=REQUIREMENTS_FILE
-)
+)"""
