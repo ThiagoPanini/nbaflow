@@ -50,7 +50,7 @@ import jaiminho.exchange as jex
 
 # Logging
 import logging
-from utils.log import log_config
+from nbaflow.utils.log import log_config
 
 
 """
