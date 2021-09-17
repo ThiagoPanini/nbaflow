@@ -6,7 +6,6 @@ O objetivo deste script é propor uma forma rápida e
 direta de realizar a ingestão de dados já processados
 de partidas de jogadores da NBA em uma tabela de
 um banco de dados existente em um servidor.
-
 Os dados estão previamente disponíveis em um arquivo
 csv e, como premissa adicional, deve-se garantir a
 existência de um servidor PostgreSQL disponível para
@@ -15,7 +14,6 @@ a serem executados giram em torno da criação de uma
 tabela com base no layout do arquivo csv e, 
 posteriormente, a ingestão dos dados lidos nesta 
 tabela.
-
 Table of Contents
 ---------------------------------------------------
 1. Configurações Iniciais
@@ -39,7 +37,7 @@ Table of Contents
 """
 
 # Importando classe encapsulada
-from nbaflow.database import DatabaseConnection
+from cloudgeass.aws.rds import PostgreSQLConnection
 
 # Pacotes python padrão
 import pandas as pd
@@ -47,7 +45,7 @@ import os
 from dotenv import find_dotenv, load_dotenv
 
 # Classe customizada para operações com s3 e boto3
-from utils.aws.s3 import JimmyBuckets
+from nbaflow.utils.log import log_config
 
 # Logging
 import logging
@@ -60,57 +58,6 @@ import logging
 ---------------------------------------------------
 """
 
-# Definindo função para configurar objeto de log do código
-def log_config(logger, level=logging.DEBUG, 
-               log_format='%(levelname)s;%(asctime)s;%(filename)s;%(module)s;%(lineno)d;%(message)s',
-               log_filepath=os.path.join(os.getcwd(), 'exec_log/execution_log.log'),
-               flag_file_handler=False, flag_stream_handler=True, filemode='a'):
-    """
-    Função que recebe um objeto logging e aplica configurações básicas ao mesmo
-    
-    Parâmetros
-    ----------
-    :param logger: objeto logger criado no escopo do módulo [type: logging.getLogger()]
-    :param level: level do objeto logger criado [type: level, default=logging.DEBUG]
-    :param log_format: formato do log a ser armazenado [type: string]
-    :param log_filepath: caminho onde o arquivo .log será armazenado 
-        [type: string, default='exec_log/execution_log.log']
-    :param flag_file_handler: define se será criado um arquivo de armazenamento de log
-        [type: bool, default=False]
-    :param flag_stream_handler: define se as mensagens de log serão mostradas na tela
-        [type: bool, default=True]
-    :param filemode: tipo de escrita no arquivo de log [type: string, default='a' (append)]
-    
-    Retorno
-    -------
-    :return logger: objeto logger pré-configurado
-    """
-
-    # Setting level for the logger object
-    logger.setLevel(level)
-
-    # Creating a formatter
-    formatter = logging.Formatter(log_format, datefmt='%Y-%m-%d %H:%M:%S')
-
-    # Creating handlers
-    if flag_file_handler:
-        log_path = '/'.join(log_filepath.split('/')[:-1])
-        if not os.path.isdir(log_path):
-            os.makedirs(log_path)
-
-        # Adding file_handler
-        file_handler = logging.FileHandler(log_filepath, mode=filemode, encoding='utf-8')
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-    if flag_stream_handler:
-        # Adding stream_handler
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)    
-        logger.addHandler(stream_handler)
-
-    return logger
-
 # Instanciando e configurando objeto de log
 logger = logging.getLogger(__file__)
 logger = log_config(logger)
@@ -120,14 +67,6 @@ PROJECT_PATH = os.getcwd()
 DATA_PATH = os.path.join(PROJECT_PATH, 'dev/data')
 FILENAME = 'all_players_gamelog.csv'
 DB_TABLE = 'nba_players_gamelog'
-
-# Definindo variáveis de coleta de dados no s3
-S3_BUCKET = 'nbaflow-files'
-S3_FILE_KEY = 'all_players_gamelog.csv'
-REGION = 'sa-east-1'
-
-# Variável de leitura dos dados ("s3" ou "local")
-DATA_SOURCE = 's3'
 
 
 """
@@ -157,19 +96,12 @@ print('-' * 62)
 print('Ingestão de histórico pré-processado de partidas da NBA')
 print('-' * 62)
 
-# Lendo arquivo de acordo com a fonte selecionada (s3 ou local)
-if DATA_SOURCE == 's3':
-    jbuckets = JimmyBuckets(region=REGION)
-    df = jbuckets.object_to_df(bucket_name=S3_BUCKET, key=S3_FILE_KEY, encoding='utf-8')
-elif DATA_SOURCE == 'local':
-    try:
-        df = pd.read_csv(os.path.join(DATA_PATH, FILENAME))
-        logger.info(f'Arquivo de histórico de partidas da NBA lido com sucesso. Dimensões: {df.shape}')
-    except Exception as e:
-        logger.error(f'Erro ao ler arquivo {FILENAME}. Exception: {e}')
-        exit()
-else:
-    logger.error(f'Variável DATA_SOURCE {DATA_SOURCE} inválida. Selecione entre "s3" ou "local" para origem dos dados')
+# Lendo arquivo de acordo com a fonte selecionada
+try:
+    df = pd.read_csv(os.path.join(DATA_PATH, FILENAME))
+    logger.info(f'Arquivo de histórico de partidas da NBA lido com sucesso. Dimensões: {df.shape}')
+except Exception as e:
+    logger.error(f'Erro ao ler arquivo {FILENAME}. Exception: {e}')
     exit()
 
 
@@ -185,10 +117,12 @@ construindo query de ingestão dos dados disponíveis
 
 # Instância de conexão ao banco de dados
 load_dotenv(find_dotenv())
-db = DatabaseConnection(host=os.getenv('DB_HOST'), 
-                        database=os.getenv('DB_NAME'), 
-                        user=os.getenv('DB_USER'),
-                        password=os.getenv('DB_PWD'))
+db = PostgreSQLConnection(
+    host=os.getenv('DB_HOST'), 
+    database=os.getenv('DB_NAME'), 
+    user=os.getenv('DB_USER'),
+    password=os.getenv('DB_PWD')
+)
 
 # Dropando tabela, caso existentes
 db.execute_query(query=f'DROP TABLE IF EXISTS {DB_TABLE}')
@@ -206,4 +140,3 @@ if table_rows == len(df):
 else:
     logger.warning(f'Quantidade de linhas na tabela ({table_rows}) difere da quantidade de linhas do DataFrame ({len(df)})')
 exit()
-

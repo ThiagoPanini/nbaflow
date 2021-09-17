@@ -36,7 +36,10 @@ Table of Contents
 """
 
 # Importando classe encapsulada
-from nbaflow.database import DatabaseConnection
+from io import BytesIO
+from exchangelib import attachments
+from cloudgeass.aws.rds import PostgreSQLConnection
+from nbaflow.utils.log import log_config
 
 # Pacotes python padrão
 import pandas as pd
@@ -45,7 +48,7 @@ import os
 from dotenv import find_dotenv, load_dotenv
 
 # Biblioteca customizada para envio de e-mails
-from xchange_mail.mail import send_simple_mail
+import jaiminho.exchange as jex
 
 # Logging
 import logging
@@ -57,57 +60,6 @@ import logging
                1.2 Configurando log
 ---------------------------------------------------
 """
-
-# Definindo função para configurar objeto de log do código
-def log_config(logger, level=logging.DEBUG, 
-               log_format='%(levelname)s;%(asctime)s;%(filename)s;%(module)s;%(lineno)d;%(message)s',
-               log_filepath=os.path.join(os.getcwd(), 'exec_log/execution_log.log'),
-               flag_file_handler=False, flag_stream_handler=True, filemode='a'):
-    """
-    Função que recebe um objeto logging e aplica configurações básicas ao mesmo
-    
-    Parâmetros
-    ----------
-    :param logger: objeto logger criado no escopo do módulo [type: logging.getLogger()]
-    :param level: level do objeto logger criado [type: level, default=logging.DEBUG]
-    :param log_format: formato do log a ser armazenado [type: string]
-    :param log_filepath: caminho onde o arquivo .log será armazenado 
-        [type: string, default='exec_log/execution_log.log']
-    :param flag_file_handler: define se será criado um arquivo de armazenamento de log
-        [type: bool, default=False]
-    :param flag_stream_handler: define se as mensagens de log serão mostradas na tela
-        [type: bool, default=True]
-    :param filemode: tipo de escrita no arquivo de log [type: string, default='a' (append)]
-    
-    Retorno
-    -------
-    :return logger: objeto logger pré-configurado
-    """
-
-    # Setting level for the logger object
-    logger.setLevel(level)
-
-    # Creating a formatter
-    formatter = logging.Formatter(log_format, datefmt='%Y-%m-%d %H:%M:%S')
-
-    # Creating handlers
-    if flag_file_handler:
-        log_path = '/'.join(log_filepath.split('/')[:-1])
-        if not os.path.isdir(log_path):
-            os.makedirs(log_path)
-
-        # Adding file_handler
-        file_handler = logging.FileHandler(log_filepath, mode=filemode, encoding='utf-8')
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-    if flag_stream_handler:
-        # Adding stream_handler
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)    
-        logger.addHandler(stream_handler)
-
-    return logger
 
 # Instanciando e configurando objeto de log
 logger = logging.getLogger(__file__)
@@ -208,10 +160,12 @@ query = f"""
 
 # Instanciando objeto de conexão ao banco
 load_dotenv(find_dotenv())
-db = DatabaseConnection(host=os.getenv('DB_HOST'), 
-                        database=os.getenv('DB_NAME'), 
-                        user=os.getenv('DB_USER'),
-                        password=os.getenv('DB_PWD'))
+db = PostgreSQLConnection(
+    host=os.getenv('DB_HOST'), 
+    database=os.getenv('DB_NAME'), 
+    user=os.getenv('DB_USER'),
+    password=os.getenv('DB_PWD')
+)
 
 # Definindo parâmetros de retorno e executando consulta
 result_columns = ['player_name', 'season', 'season_type', 'matches', 'wins', 'avg_mins',
@@ -265,22 +219,24 @@ else:
         Conforme solicitado, a tabela abaixo contém dados estatísticos de performance do jogador {player_name} na temporada {season}\n\n
     """
 
-    # Enviando e-mail
+    # Configurando e-mail a ser enviado
     try:
-        send_simple_mail(username=MAIL_FROM,
-                        password=MAIL_PWD,
-                        server=MAIL_SERVER,
-                        mail_box=MAIL_BOX,
-                        mail_to=MAIL_TO,
-                        mail_body=MAIL_BODY,
-                        df=player_stats,
-                        df_on_body=True,
-                        df_on_attachment=True,
-                        attachment_filename=f'{player_name}_{season.replace("-", "_")}_stats.csv',
-                        subject=f'[NBAFlow] Estatísticas de {player_name} na temporada {season}')
+        # Preparando insumos
+        df_html = jex.df_to_html(player_stats)
+        zip_att = zip([f'{player_name}_{season}.csv'], [player_stats])
+
+        # Enviando e-mail
+        jex.send_mail(
+            username=MAIL_FROM,
+            password=os.getenv('MAIL_PWD'),
+            server=MAIL_SERVER,
+            mail_box=MAIL_BOX,
+            mail_to=MAIL_TO,
+            subject=f'[NBAFlow] Estatísticas de {player_name} na temporada {season}',
+            body=MAIL_BODY + df_html,
+            zip_attachments=zip_att
+        )
         logger.info(f'E-mail com estatísticas de {player_name} na temporada {season} enviado com sucesso. Programa encerrado.')
     except Exception as e:
         logger.error(f'Erro ao enviar e-mail. Exception: {e}')
         exit()
-    
-    
