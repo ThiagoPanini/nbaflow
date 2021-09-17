@@ -1,5 +1,6 @@
 nba_api
 psycopg2
+psycopg2-binary
 pandas
 boto3
 cloudgeass
