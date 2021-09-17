@@ -46,7 +46,7 @@ import os
 
 # Logging
 import logging
-from utils.log import log_config
+from nbaflow.utils.log import log_config
 
 
 """
@@ -129,6 +129,4 @@ jbuckets.upload_directory(
     directory=DATA_PATH,
     bucket_name=BUCKET_NAME
 )
-
-
 
