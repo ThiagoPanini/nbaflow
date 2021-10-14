@@ -15,6 +15,7 @@ dev/data/backup/
 dev/data/*.hyper
 tmp/
 aws/lambda/nbaflow_layer/python/
+data/
 
 # Scripts dep rocessamento auxiliar paralelo
 dev/scripts/data_generation/tmp_parallel_run/
