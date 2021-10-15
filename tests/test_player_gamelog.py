@@ -15,7 +15,7 @@ Table of Contents
 2. Testes de funcionalidades
     2.1 Jogador único em temporada única
     2.2 Jogador único em todas as temporadas
-    2.3 Múltiplos jogadores em múltiplas temporadas
+    2.3 Todos os jogadores em todas as temporadas
 ---------------------------------------------------
 """
 
@@ -135,3 +135,30 @@ rows = player_all_seasons.shape[0]
 season_types = list(player_all_seasons['SEASON_TYPE'].drop_duplicates().values)
 assert rows == 743, f'Quantidade de partidas retornadas ({rows}) difere do esperado (743)'
 assert season_types == ['Playoffs', 'Regular Season'], f'Tipos de temporadas retornadas ({season_types}) diferem do esperado'
+
+
+"""
+---------------------------------------------------
+---------- 2. TESTES DE FUNCIONALIDADES -----------
+   2.3 Todos os jogadores em única temporada
+---------------------------------------------------
+"""
+
+# Extraindo gamelog completo de jogadores ativos da NBA
+season_gamelog = DataFrame()
+active_players = gamelog.active_players
+i = 1
+for id in active_players['id'].values:
+    if i % 100 == 0:
+        pct_done = int(round(100 *  (i / len(active_players)), 0))
+        logger.debug(f'{i} requisições realizadas ({pct_done}% concluído)')
+    
+    # Enriquecendo base
+    season_gamelog = season_gamelog.append(gamelog.player_gamelog_season_complete(
+        player_id=id,
+        season=season
+    ))
+
+    i += 1
+
+print(active_players)
