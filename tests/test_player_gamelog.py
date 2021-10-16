@@ -31,7 +31,7 @@ Table of Contents
 
 # Funcionalidades nbaflow
 from nbaflow.gamelog import NBAPlayerGamelog
-from nbaflow.utils.log import log_config
+from nbaflow.utils import log_config
 
 # Funcionalidades nba_api
 from nba_api.stats.static import players
@@ -158,7 +158,11 @@ for id in active_players['id'].values:
         player_id=id,
         season=season
     ))
-
     i += 1
 
-print(active_players)
+rows = season_gamelog.shape[0]
+season_result = matchup = season_gamelog['SEASON'].drop_duplicates().values[0]
+assert rows == 21409, f'Quantidade de partidas retornadas ({rows}) difere do esperado (21409)'
+assert season == season_result, f'A temporada extraída ({season_result}) difere da temporada esperada ({season})'
+
+logger.info(f'Validações da classe gamelog finalizada com sucesso')

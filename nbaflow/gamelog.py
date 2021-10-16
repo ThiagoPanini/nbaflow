@@ -34,13 +34,12 @@ from nba_api.stats.static import players
 from nba_api.stats.endpoints import commonplayerinfo, playergamelog
 
 # Bibliotecas padrão
-import os
 import pandas as pd
 from datetime import datetime
 
 # Logging
 import logging
-from nbaflow.utils.log import log_config
+from nbaflow.utils import log_config
 
 
 """
@@ -122,7 +121,7 @@ class NBAPlayerGamelog:
         [type: pd.DataFrame]
     """
     
-    def __init__(self, verbose=1):
+    def __init__(self, verbose=True):
         self.error_cols = ['player_id', 'player_name', 'season', 'season_type', 'timeout']
         self.error_data = pd.DataFrame(columns=self.error_cols)
         self.all_players = pd.DataFrame(players.get_players())
@@ -287,7 +286,8 @@ class NBAPlayerGamelog:
             # Iterando sobre número finito de tentativas
             for i in range(num_attempts):                    
                 # Iterando sobre requisições com falhas
-                logger.debug(f'Tentativa número {i + 1} de reprocessamento com timeout ajustado em + {timeout_increase}s')
+                if self.verbose:
+                    logger.debug(f'Tentativa número {i + 1} de reprocessamento com timeout ajustado em + {timeout_increase}s')
                 for index, data in fail_requests.iterrows():
                     # Incrementando base de dados
                     gamelog_data = gamelog_data.append(self.player_gamelog_season(player_id=data['player_id'],
@@ -311,7 +311,8 @@ class NBAPlayerGamelog:
             i = 0
             while True:                    
                 # Iterando sobre requisições com falhas
-                logger.debug(f'Tentativa número {i + 1} de reprocessamento com timeout ajustado em + {timeout_increase}s')
+                if self.verbose:
+                    logger.debug(f'Tentativa número {i + 1} de reprocessamento com timeout ajustado em + {timeout_increase}s')
                 for index, data in fail_requests.iterrows():
                     # Incrementando base de dados
                     gamelog_data = gamelog_data.append(self.player_gamelog_season(player_id=data['player_id'],
@@ -355,12 +356,14 @@ class NBAPlayerGamelog:
         try:
             players_dict = players.find_player_by_id(player_id=player_id)
             if player_id_key not in players_dict.keys():
-                logger.warning(f'Chave "{player_id_key}" não disponível. Escolha entre as opções: {list(players_dict.keys())}. Retornando id de entrada.')
+                if self.verbose:
+                    logger.warning(f'Chave "{player_id_key}" não disponível. Escolha entre as opções: {list(players_dict.keys())}. Retornando id de entrada.')
                 return player_id
             else:
                 return players_dict[player_id_key]
         except Exception as e:
-            logger.warning(f'Erro ao encontrar jogador {player_id}. Retornando id de entrada')
+            if self.verbose:
+                logger.warning(f'Erro ao encontrar jogador {player_id}. Retornando id de entrada')
             return player_id
     
     # Gerando lista formatada de temporadas a serem consideradas nas extrações históricas
@@ -461,7 +464,7 @@ class NBAPlayerGamelog:
             self.store_error_data(error_dict)
             
             # Comunicando log de acordo com o atributo verbose
-            if self.verbose > 1:
+            if self.verbose:
                 logger.error(f'Erro ao retornar dados do jogador {player_log_id} em {season_type_all_star} {season}. Exception: {e}')
             
             return None
@@ -554,7 +557,8 @@ class NBAPlayerGamelog:
                                                                                     timeout=timeout))
 
         if reprocess and len(self.error_data) > 0:
-            logger.warning(f'Retorno incompleto para o jogador {player_log_id} na temporada {season}. Iniciando reprocessamento')
+            if self.verbose:
+                logger.warning(f'Retorno incompleto para o jogador {player_log_id} na temporada {season}. Iniciando reprocessamento')
             
             # Extração de parâmetros de reprocessamento
             error_strategy = kwargs['error_strategy'] if 'error_strategy' in kwargs else 'infinity'
@@ -632,7 +636,8 @@ class NBAPlayerGamelog:
                 continue
             
         # Iterando sobre todas as temporadas do jogador
-        logger.debug(f'Extraindo histórico de partidas de {player_log_id} em {season_type_all_star} entre {from_year} e {to_year}')
+        if self.verbose:
+            logger.debug(f'Extraindo histórico de partidas de {player_log_id} em {season_type_all_star} entre {from_year} e {to_year}')
         for season in self.get_seasons_list(from_year, to_year):
             df_gamelog = df_gamelog.append(self.player_gamelog_season(player_id=player_id,
                                                                       season=season,
@@ -739,11 +744,13 @@ class NBAPlayerGamelog:
             except Exception as e:
                 attempts += 1
                 if attempts % 5 == 0:
-                    logger.warning(f'{attempts + 1} tentativas realizadas para extrair temporadas válidas de {player_log_id}')
+                    if self.verbose:
+                        logger.warning(f'{attempts + 1} tentativas realizadas para extrair temporadas válidas de {player_log_id}')
                 continue
             
         # Iterando sobre todas as temporadas Regualres e Playoffs
-        logger.debug(f'Extraindo histórico de partidas de {player_log_id} entre {from_year} e {to_year}')
+        if self.verbose:
+            logger.debug(f'Extraindo histórico de partidas de {player_log_id} entre {from_year} e {to_year}')
         for season in player_seasons:
             for season_type in season_types:
                 df_all_seasons = df_all_seasons.append(self.player_gamelog_season(player_id=player_id,
@@ -757,7 +764,8 @@ class NBAPlayerGamelog:
         
         if reprocess and len(self.error_data) > 0:
             pct_success = str(round(100 * (total_requests - len(self.error_data)) / total_requests, 1)) + '%'
-            logger.warning(f'Dados de {player_log_id} retornados com {pct_success} de sucesso. Iniciando reprocessamento')
+            if self.verbose:
+                logger.warning(f'Dados de {player_log_id} retornados com {pct_success} de sucesso. Iniciando reprocessamento')
             
             # Extração de parâmetros de reprocessamento
             error_strategy = kwargs['error_strategy'] if 'error_strategy' in kwargs else 'infinity'
@@ -772,7 +780,8 @@ class NBAPlayerGamelog:
                 
         # Ordenando dados por data da partida e retornando DataFrame com índice ajustado
         final_pct_success = str(round(100 * (total_requests - len(self.error_data)) / total_requests, 1)) + '%'
-        logger.info(f'Processo finalizado para {player_log_id} com {final_pct_success} de sucesso')
+        if self.verbose:
+            logger.info(f'Processo finalizado para {player_log_id} com {final_pct_success} de sucesso')
         df_all_seasons.sort_values(by='GAME_DATE', ascending=False, inplace=True)
                
         return df_all_seasons.reset_index(drop=True)
