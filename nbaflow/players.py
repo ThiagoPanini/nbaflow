@@ -30,11 +30,12 @@ Table of Contents
 """
 
 # Endpoints nba_api
-from nba_api.stats.endpoints import commonallplayers
+from nba_api.stats.endpoints import commonallplayers, playergamelog
 
 # Bibliotecas python
 from datetime import datetime
 import requests
+import pandas as pd
 
 # Logging
 import logging
@@ -114,6 +115,30 @@ def get_player_image(player_id, timeout=30, static_url=IMG_STATIC_URL):
     img = requests.get(url, timeout=timeout)
 
     return img.content
+
+# Função para extração de gamelog de jogador único em temporada única
+def get_player_gamelog(player_id, season, season_type='Regular Season', timeout=30):
+    """
+    """
+
+    # Retornando gamelog de jogador
+    player_gamelog = playergamelog.PlayerGameLog(
+        player_id=player_id,
+        season=season,
+        season_type_all_star=season_type,
+        timeout=timeout
+    )
+
+    # Transformando dados em DataFrame e adicionando informações de temporada
+    df_gamelog = player_gamelog.player_game_log.get_data_frame()
+    df_gamelog['SEASON'] = season
+    df_gamelog['SEASON_TYPE'] = season_type
+
+    # Transformando coluna de data na base
+    df_gamelog['GAME_DATE'] = pd.to_datetime(df_gamelog['GAME_DATE'])
+    df_gamelog.columns = [col.lower().strip() for col in df_gamelog.columns]
+
+    return df_gamelog
 
 
 """
