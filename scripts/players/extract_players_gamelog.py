@@ -14,6 +14,7 @@ Table of Contents
     1.2 Definindo parâmetros
 2. Extração de histórico de partidas
     2.1 Iterando sobre jogadores ativos
+    2.2 Preparando base e salvando dados
 ---------------------------------------------------
 """
 
@@ -29,12 +30,15 @@ Table of Contents
 """
 
 # Funcionalidades nbaflow
-from nbaflow.players import get_players_info, get_player_gamelog
+from requests import exceptions
+from nbaflow.players import PlayerFeatures, get_players_info, get_player_gamelog
 
 # Bibliotecas python
 from datetime import datetime
+from time import sleep
 import os
 import pandas as pd
+from requests.exceptions import ReadTimeout
 
 # Logging
 import logging
@@ -56,7 +60,8 @@ logger = log_config(logger)
 PROJECT_PATH = os.getcwd()
 
 # Definindo parâmetros de temporada
-CURRENT_YEAR = datetime.now().year
+SEASON_OFFSET = 1
+CURRENT_YEAR = datetime.now().year - SEASON_OFFSET
 SEASON = str(CURRENT_YEAR - 1) + '-' + str(CURRENT_YEAR)[-2:]
 SEASON_TYPES = ['Regular Season', 'Playoffs']
 
@@ -68,13 +73,12 @@ GAMELOG_COLS = ['player_id', 'player_name', 'player_team', 'player_team_abbrev',
                 'fta', 'ft_pct', 'oreb', 'dreb', 'reb', 'ast', 'stl', 'blk', 'tov',     
                 'pf', 'pts', 'plus_minus', 'video_available']
 
-TMP_COLS = ['season_id', 'player_id', 'game_id', 'game_date', 'matchup', 'wl',
-            'min', 'fgm', 'fga', 'fg_pct', 'fg3m', 'fg3a', 'fg3_pct', 'ftm', 'fta',
-            'ft_pct', 'oreb', 'dreb', 'reb', 'ast', 'stl', 'blk', 'tov', 'pf',
-            'pts', 'plus_minus', 'video_available', 'season', 'season_type']
-
-all_gamelog = pd.read_csv(os.path.join(PROJECT_PATH, 'data/all_players_gamelog.csv'))
-
+# Instanciando objeto de extração de dados
+player_extractor = PlayerFeatures(
+    recursive_request=True,
+    timeout_increase=5,
+    timesleep=3
+)
 
 """
 ---------------------------------------------------
@@ -85,7 +89,7 @@ all_gamelog = pd.read_csv(os.path.join(PROJECT_PATH, 'data/all_players_gamelog.c
 
 # Iterando sobre jogadores ativos da liga
 logger.debug(f'Obtendo base de jogadores ativos da liga')
-players_info = get_players_info()
+players_info = player_extractor.get_players_info()
 
 # Definindo variáveis adicionais
 i = 1
@@ -93,9 +97,9 @@ total_players = len(players_info)
 players_gamelog = pd.DataFrame()
 
 logger.debug(f'Iterando sobre os {total_players} jogadores ativos para cada tipo de temporada ({SEASON_TYPES})')
-for idx, row in players_info.head().iterrows():
+for idx, row in players_info.iterrows():
     for season_type in SEASON_TYPES:
-        season_gamelog = get_player_gamelog(
+        season_gamelog = player_extractor.get_player_gamelog(
             player_id=row['person_id'],
             season=SEASON,
             season_type=season_type
@@ -109,24 +113,33 @@ for idx, row in players_info.head().iterrows():
         logger.debug(f'{i}/{total_players} requisições realizadas ({round(100 * (i / total_players), 1)}% concluído)')
     i += 1
 
-logger.debug(f'Enriquecendo base de gamelog com dados adicionais dos jogadores')
-players_info_filtered = players_info.loc[:, PLAYERS_INFO_COLS]
-players_info_filtered['player_team'] = players_info_filtered['team_city'] + ' ' + players_info_filtered['team_name']
-players_info_filtered.drop(['team_city', 'team_name'], axis=1, inplace=True)
-players_info_filtered.columns = ['player_id', 'player_name', 'player_team_abbrev', 'player_team']
-
-players_gamelog = players_gamelog.merge(players_info_filtered, how='left', on='player_id')
-players_gamelog = players_gamelog.loc[:, GAMELOG_COLS]
-
-print(players_gamelog.columns)
-print(players_gamelog.columns == all_gamelog.columns)
-#players_gamelog.to_csv('gamelog_test.csv', index=False)
 
 """
-TODO
-* Adicionar try/except em pontos estratégicos do código
-* Inserir lógica de armazenamento de arquivo processado (local, db ou s3)
-    - Gerar arquivo por season (prefixo: players_gamelog_2020_21.csv, players_gamelog_2021_22.csv, etc...)
-* [OPCIONAL] Inserir lógica de união de arquivo histórico com processamento atual
-    - Isso pode ser um processo apartado caso decida-se pelo armazenamento de arquivo por season
+---------------------------------------------------
+------ 2. EXTRAÇÃO DE HISTÓRICO DE PARTIDAS -------
+       2.2 Preparando base e salvando dados
+---------------------------------------------------
 """
+
+logger.debug(f'Preparando e enriquecendo base de gamelog extraída')
+try:
+    players_info_filtered = players_info.loc[:, PLAYERS_INFO_COLS]
+    players_info_filtered['player_team'] = players_info_filtered['team_city'] + ' ' + players_info_filtered['team_name']
+    players_info_filtered.drop(['team_city', 'team_name'], axis=1, inplace=True)
+    players_info_filtered.columns = ['player_id', 'player_name', 'player_team_abbrev', 'player_team']
+
+    players_gamelog = players_gamelog.merge(players_info_filtered, how='left', on='player_id')
+    players_gamelog = players_gamelog.loc[:, GAMELOG_COLS]
+except Exception as e:
+    logger.error(f'Erro ao preparar base de gamelog extraída.\n\n')
+    raise e
+
+logger.debug(f'Salvando arquivo de gamelog extraído')
+try:
+    filename = f'players_gamelog_{SEASON}.csv'
+    gamelog_path = os.path.join(PROJECT_PATH, f'data/{filename}')
+    players_gamelog.to_csv(gamelog_path, index=False)
+except Exception as e:
+    logger.error(f'Erro ao salvar arquivo de gamelog extraído\n\n')
+    raise e
+
