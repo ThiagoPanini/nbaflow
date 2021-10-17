@@ -12,8 +12,6 @@ Table of Contents
     1.1 Importando bibliotecas e definindo parâmetros
 2. Funcionalidades úteis
     2.1 Logs
-    2.2 Requisições
-    2.3 Jogadores
 ---------------------------------------------------
 """
 
