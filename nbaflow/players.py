@@ -173,7 +173,7 @@ class PlayerFeatures:
                     function_args['timeout'] += self.timeout_increase
                     sleep(self.timesleep)
                 except Exception as e:
-                    logger.error(f'Erro genérico na requisição {function.__name__}() com os argumentos: {function_args}. Retornando vazio')
+                    logger.error(f'Erro genérico na requisição {function.__name__}() com os argumentos: {function_args}. Retornando vazio. Exception: {e}')
                     return None
                 
         else:
@@ -190,7 +190,6 @@ class PlayerFeatures:
             
             logger.error('Tentativas esgotadas de requisição sem resposta obtida')
             return None
-
 
     def get_players_info(self, timeout=30, active=True):
         """
