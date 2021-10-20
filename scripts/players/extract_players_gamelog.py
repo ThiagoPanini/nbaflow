@@ -30,8 +30,8 @@ Table of Contents
 """
 
 # Funcionalidades nbaflow
-from requests import exceptions
-from nbaflow.players import PlayerFeatures, get_players_info, get_player_gamelog
+from pandas.core.frame import DataFrame
+from nbaflow.players import PlayerFeatures
 
 # Funcionalidades cloudgeass
 from cloudgeass.aws.s3 import JimmyBuckets
@@ -59,9 +59,11 @@ logger = log_config(logger)
 
 # Definindo parâmetros de diretório
 PROJECT_PATH = os.getcwd()
+DATA_PATH = os.path.join(PROJECT_PATH, 'data')
+DATA_PREFIX = 'players_gamelog_2'
 
 # Definindo parâmetros de temporada
-SEASON_OFFSET = 0
+SEASON_OFFSET = 13
 CURRENT_YEAR = datetime.now().year - SEASON_OFFSET
 SEASON = str(CURRENT_YEAR - 1) + '-' + str(CURRENT_YEAR)[-2:]
 SEASON_TYPES = ['Regular Season', 'Playoffs']
@@ -76,6 +78,7 @@ GAMELOG_COLS = ['player_id', 'player_name', 'player_team', 'player_team_abbrev',
 
 # Definindo parâmetros de output dos resultados
 OUTPUT = 'local'
+UNION_ALL = True
 
 # Instanciando objeto de extração de dados
 player_extractor = PlayerFeatures(
@@ -143,7 +146,7 @@ logger.debug(f'Salvando arquivo de gamelog extraído')
 # Salvamento local
 if OUTPUT == 'local':
     try:
-        gamelog_path = os.path.join(PROJECT_PATH, f'data/players_gamelog_{SEASON}.csv')
+        gamelog_path = os.path.join(DATA_PATH, f'players_gamelog_{SEASON}.csv')
         players_gamelog.to_csv(gamelog_path, index=False)
     except Exception as e:
         logger.error(f'Erro ao salvar arquivo de gamelog em diretório local\n')
@@ -162,3 +165,28 @@ elif OUTPUT == 's3':
         logger.error(f'Erro ao realizar upload de gamelog em bucket s3\n')
         raise e
 
+
+"""
+---------------------------------------------------
+------ 2. EXTRAÇÃO DE HISTÓRICO DE PARTIDAS -------
+        2.3 Unindo bases locais existentes
+---------------------------------------------------
+"""
+
+# Lendo todas as bases encontradas no diretório alvo
+if UNION_ALL and OUTPUT == 'local':
+    logger.debug(f'Unindo arquivos e salvando base com histórico completo')
+    try:
+        gamelog_complete = DataFrame()
+        for file in [f for f in os.listdir(DATA_PATH) if DATA_PREFIX in f]:
+            filepath = os.path.join(DATA_PATH, file)
+            gamelog_complete = gamelog_complete.append(pd.read_csv(filepath))
+
+        # Salvando arquivo final
+        gamelog_complete.to_csv(os.path.join(DATA_PATH, 'players_gamelog_complete.csv'), index=False)
+    except Exception as e:
+        logger.error(f'Erro ao unir bases e salvar arquivo final em formato csv\n')
+        raise e
+
+# Finalização
+logger.info(f'Processo finalizado com sucesso')
