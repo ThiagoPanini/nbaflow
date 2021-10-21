@@ -34,7 +34,9 @@ from nba_api.stats.endpoints import commonallplayers, playergamelog
 
 # Bibliotecas python
 from datetime import datetime
+from time import sleep
 import requests
+from requests.exceptions import ReadTimeout
 import pandas as pd
 
 # Logging
@@ -147,12 +149,57 @@ def get_player_gamelog(player_id, season, season_type='Regular Season', timeout=
 ---------------------------------------------------
 """
 
-#class PlayerFeatures:
+class PlayerFeatures:
+    """
+    """
 
-"""
-TODO
-    - Analisar centralização de gamelog e extração de imagens em um único script
-    - Analisar permanência de classe ou quebra em diferentes funções
-    - Analisar construção de classe apenas para consolidação de múltiplas chamadas de funções (extração para jogadores ativos)
-    - Verificar como garantir o processamento das requisições com erro
-"""
+    def __init__(self, recursive_request=True, max_attempts=10, timeout_increase=5, timesleep=3):
+        self.recursive_request = recursive_request
+        self.max_attempts = max_attempts
+        self.timeout_increase = timeout_increase
+        self.timesleep = timesleep
+
+    def handle_timeout_errors(self, function, function_args):
+        """
+        """
+        if self.recursive_request:
+            # Requisitando dados em um laço infinto para tratar possíveis erros de timeout
+            i = 0
+            while True:
+                try:
+                    return function(**function_args)
+                except ReadTimeout as rto:
+                    logger.warning(f'Erro de timeout na requisição {function.__name__}() com os argumentos: {function_args}. Nova tentativa com +{self.timeout_increase} de timeout')
+                    function_args['timeout'] += self.timeout_increase
+                    sleep(self.timesleep)
+                except Exception as e:
+                    logger.error(f'Erro genérico na requisição {function.__name__}() com os argumentos: {function_args}. Retornando vazio. Exception: {e}')
+                    return None
+                
+        else:
+            # Requisitando dados em um número finito de tentativas
+            for i in range(self.max_attempts):
+                try:
+                    return function(**function_args)
+                except ReadTimeout as rto:
+                    logger.warning(f'Erro de timeout na requisição {function.__name__}() com os argumentos: {function_args}. Iniciando tentativa {i+1}/{self.max_attempts} com +{self.timeout_increase} de timeout')
+                    function_args['timeout'] += self.timeout_increase
+                except Exception as e:
+                    logger.error(f'Erro genérico na requisição {function.__name__}() com os argumentos: {function_args}. Retornando vazio')
+                    return None
+            
+            logger.error('Tentativas esgotadas de requisição sem resposta obtida')
+            return None
+
+    def get_players_info(self, timeout=30, active=True):
+        """
+        """
+        function_args = {'timeout': timeout, 'active': active}
+        return self.handle_timeout_errors(function=get_players_info, function_args=function_args)
+
+    def get_player_gamelog(self, player_id, season, season_type='Regular Season', timeout=30):
+        """
+        """
+        function_args = {'player_id': player_id, 'season': season, 'season_type': season_type, 'timeout': timeout}
+        return self.handle_timeout_errors(function=get_player_gamelog, function_args=function_args)
+

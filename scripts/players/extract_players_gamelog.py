@@ -14,6 +14,7 @@ Table of Contents
     1.2 Definindo parâmetros
 2. Extração de histórico de partidas
     2.1 Iterando sobre jogadores ativos
+    2.2 Preparando base e salvando dados
 ---------------------------------------------------
 """
 
@@ -29,7 +30,11 @@ Table of Contents
 """
 
 # Funcionalidades nbaflow
-from nbaflow.players import get_players_info, get_player_gamelog
+from pandas.core.frame import DataFrame
+from nbaflow.players import PlayerFeatures
+
+# Funcionalidades cloudgeass
+from cloudgeass.aws.s3 import JimmyBuckets
 
 # Bibliotecas python
 from datetime import datetime
@@ -54,9 +59,12 @@ logger = log_config(logger)
 
 # Definindo parâmetros de diretório
 PROJECT_PATH = os.getcwd()
+DATA_PATH = os.path.join(PROJECT_PATH, 'data')
+DATA_PREFIX = 'players_gamelog_2'
 
 # Definindo parâmetros de temporada
-CURRENT_YEAR = datetime.now().year
+SEASON_OFFSET = 13
+CURRENT_YEAR = datetime.now().year - SEASON_OFFSET
 SEASON = str(CURRENT_YEAR - 1) + '-' + str(CURRENT_YEAR)[-2:]
 SEASON_TYPES = ['Regular Season', 'Playoffs']
 
@@ -68,13 +76,16 @@ GAMELOG_COLS = ['player_id', 'player_name', 'player_team', 'player_team_abbrev',
                 'fta', 'ft_pct', 'oreb', 'dreb', 'reb', 'ast', 'stl', 'blk', 'tov',     
                 'pf', 'pts', 'plus_minus', 'video_available']
 
-TMP_COLS = ['season_id', 'player_id', 'game_id', 'game_date', 'matchup', 'wl',
-            'min', 'fgm', 'fga', 'fg_pct', 'fg3m', 'fg3a', 'fg3_pct', 'ftm', 'fta',
-            'ft_pct', 'oreb', 'dreb', 'reb', 'ast', 'stl', 'blk', 'tov', 'pf',
-            'pts', 'plus_minus', 'video_available', 'season', 'season_type']
+# Definindo parâmetros de output dos resultados
+OUTPUT = 'local'
+UNION_ALL = True
 
-all_gamelog = pd.read_csv(os.path.join(PROJECT_PATH, 'data/all_players_gamelog.csv'))
-
+# Instanciando objeto de extração de dados
+player_extractor = PlayerFeatures(
+    recursive_request=True,
+    timeout_increase=5,
+    timesleep=3
+)
 
 """
 ---------------------------------------------------
@@ -85,22 +96,21 @@ all_gamelog = pd.read_csv(os.path.join(PROJECT_PATH, 'data/all_players_gamelog.c
 
 # Iterando sobre jogadores ativos da liga
 logger.debug(f'Obtendo base de jogadores ativos da liga')
-players_info = get_players_info()
+players_info = player_extractor.get_players_info()
 
 # Definindo variáveis adicionais
 i = 1
 total_players = len(players_info)
 players_gamelog = pd.DataFrame()
 
-logger.debug(f'Iterando sobre os {total_players} jogadores ativos para cada tipo de temporada ({SEASON_TYPES})')
-for idx, row in players_info.head().iterrows():
+logger.debug(f'Extraindo histórico dos {total_players} jogadores na temporada {SEASON}')
+for idx, row in players_info.iterrows():
     for season_type in SEASON_TYPES:
-        season_gamelog = get_player_gamelog(
+        season_gamelog = player_extractor.get_player_gamelog(
             player_id=row['person_id'],
             season=SEASON,
             season_type=season_type
         )
-
         # Unindo dados
         players_gamelog = players_gamelog.append(season_gamelog)
 
@@ -109,24 +119,74 @@ for idx, row in players_info.head().iterrows():
         logger.debug(f'{i}/{total_players} requisições realizadas ({round(100 * (i / total_players), 1)}% concluído)')
     i += 1
 
-logger.debug(f'Enriquecendo base de gamelog com dados adicionais dos jogadores')
-players_info_filtered = players_info.loc[:, PLAYERS_INFO_COLS]
-players_info_filtered['player_team'] = players_info_filtered['team_city'] + ' ' + players_info_filtered['team_name']
-players_info_filtered.drop(['team_city', 'team_name'], axis=1, inplace=True)
-players_info_filtered.columns = ['player_id', 'player_name', 'player_team_abbrev', 'player_team']
-
-players_gamelog = players_gamelog.merge(players_info_filtered, how='left', on='player_id')
-players_gamelog = players_gamelog.loc[:, GAMELOG_COLS]
-
-print(players_gamelog.columns)
-print(players_gamelog.columns == all_gamelog.columns)
-#players_gamelog.to_csv('gamelog_test.csv', index=False)
 
 """
-TODO
-* Adicionar try/except em pontos estratégicos do código
-* Inserir lógica de armazenamento de arquivo processado (local, db ou s3)
-    - Gerar arquivo por season (prefixo: players_gamelog_2020_21.csv, players_gamelog_2021_22.csv, etc...)
-* [OPCIONAL] Inserir lógica de união de arquivo histórico com processamento atual
-    - Isso pode ser um processo apartado caso decida-se pelo armazenamento de arquivo por season
+---------------------------------------------------
+------ 2. EXTRAÇÃO DE HISTÓRICO DE PARTIDAS -------
+       2.2 Preparando base e salvando dados
+---------------------------------------------------
 """
+
+logger.debug(f'Preparando e enriquecendo base de gamelog extraída')
+try:
+    # Preparando atributos adicionais de base comum de jogadores
+    players_info_filtered = players_info.loc[:, PLAYERS_INFO_COLS]
+    players_info_filtered['player_team'] = players_info_filtered['team_city'] + ' ' + players_info_filtered['team_name']
+    players_info_filtered.drop(['team_city', 'team_name'], axis=1, inplace=True)
+    players_info_filtered.columns = ['player_id', 'player_name', 'player_team_abbrev', 'player_team']
+
+    # Cruzando com gamelog
+    players_gamelog = players_gamelog.merge(players_info_filtered, how='left', on='player_id')
+    players_gamelog = players_gamelog.loc[:, GAMELOG_COLS]
+except Exception as e:
+    logger.error(f'Erro ao preparar base de gamelog extraída.\n')
+    raise e
+
+logger.debug(f'Salvando arquivo de gamelog extraído')
+# Salvamento local
+if OUTPUT == 'local':
+    try:
+        gamelog_path = os.path.join(DATA_PATH, f'players_gamelog_{SEASON}.csv')
+        players_gamelog.to_csv(gamelog_path, index=False)
+    except Exception as e:
+        logger.error(f'Erro ao salvar arquivo de gamelog em diretório local\n')
+        raise e
+
+# Salvamento em bucket s3
+elif OUTPUT == 's3':
+    try:
+        jbuckets = JimmyBuckets()
+        jbuckets.upload_object(
+            file=players_gamelog,
+            bucket_name='nbaflow',
+            key=f'gamelog/players_gamelog_{SEASON}.csv'
+        )
+    except Exception as e:
+        logger.error(f'Erro ao realizar upload de gamelog em bucket s3\n')
+        raise e
+
+
+"""
+---------------------------------------------------
+------ 2. EXTRAÇÃO DE HISTÓRICO DE PARTIDAS -------
+        2.3 Unindo bases locais existentes
+---------------------------------------------------
+"""
+
+# Lendo todas as bases encontradas no diretório alvo
+if UNION_ALL and OUTPUT == 'local':
+    logger.debug(f'Unindo arquivos e salvando base com histórico completo')
+    try:
+        gamelog_complete = DataFrame()
+        for file in [f for f in os.listdir(DATA_PATH) if DATA_PREFIX in f]:
+            filepath = os.path.join(DATA_PATH, file)
+            gamelog_complete = gamelog_complete.append(pd.read_csv(filepath))
+
+        # Salvando arquivo final
+        gamelog_complete.to_csv(os.path.join(DATA_PATH, 'players_gamelog_complete.csv'), index=False)
+    except Exception as e:
+        logger.error(f'Erro ao unir bases e salvar arquivo final em formato csv\n')
+        raise e
+
+# Finalização
+logger.info(f'Processo finalizado com sucesso')

@@ -43,10 +43,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'nba_api',
-        'pandas',
-        'psycopg2-binary',
-        'cloudgeass',
-        'jaiminho'
+        'pandas'
     ],
     license='MIT',
     description='Solução integrada para exploração de dados da NBA utilizando API pública e pacotes python para construção de pipelines, realização de análises estatísticas e visuais.',
