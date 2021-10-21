@@ -37,7 +37,7 @@ reqs = [str(ir.req) for ir in install_reqs]"""
 # Criando setup
 setup(
     name='nbaflow',
-    version='0.0.2',
+    version='0.0.3',
     author='Thiago Panini',
     author_email='thipanini94@gmail.com',
     packages=find_packages(),
