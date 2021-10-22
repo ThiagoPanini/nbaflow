@@ -18,7 +18,7 @@ Com a implementação dessa nova funcionalidade, os usuários poderiam:
 * Aumentar...
 * ...
 ___
-:books: **_Provável complexidade:_** [OPCIONAL]
+:books: **_Provável complexidade:_**
 A melhor opção que descreve a complexidade associada a esta funcionalidade é:
 - [ ] Extrema complexidade
 - [ ] Alta complexidade
