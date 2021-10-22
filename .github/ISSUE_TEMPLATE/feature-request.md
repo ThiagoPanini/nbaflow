@@ -25,5 +25,8 @@ A melhor opção que descreve a complexidade associada a esta funcionalidade é:
 - [ ] Média complexidade
 - [ ] Baixa complexidade
 ___
-:camera: **_Screenshots:_** [OPCIONAL]
-TODO: adicione capturas de tela com mockups, protótipos ou qualquer visão prévia da nova funcionalidade requisitada
+:bulb: **_Ideias de implementação:_**
+Para implementação da funcionalidade, seria possível:
+- Consultar...
+- Consumir...
+- Aplicar...

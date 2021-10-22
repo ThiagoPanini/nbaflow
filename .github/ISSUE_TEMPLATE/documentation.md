@@ -13,5 +13,5 @@ Elementos de código que necessitam de melhorias na documentação:
 - Método `method` da classe `class`
 - Módulo `pkg.module`
 ___
-:pencil2: **_Detalhes adicionais_**
+:pencil2: **_Detalhes adicionais:_**
 TODO: forneça uma descrição adicional da issue, templates que julgar adequados para melhorar a documentação do código existente e, se aplicável, indique problemas relacionados a documentação existente.
