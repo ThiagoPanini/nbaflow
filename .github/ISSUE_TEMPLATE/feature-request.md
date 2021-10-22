@@ -20,10 +20,7 @@ Com a implementação dessa nova funcionalidade, os usuários poderiam:
 ___
 :books: **_Provável complexidade:_**
 A melhor opção que descreve a complexidade associada a esta funcionalidade é:
-- [ ] Extrema complexidade
-- [ ] Alta complexidade
-- [ ] Média complexidade
-- [ ] Baixa complexidade
+- [Extrema/Alta/Média/Baixa] complexidade
 ___
 :bulb: **_Ideias de implementação:_**
 Para implementação da funcionalidade, seria possível:

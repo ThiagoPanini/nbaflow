@@ -15,10 +15,10 @@ TODO: forneça uma visão clara e direta do bug/problema e mencione qual a funci
 ___
 :lady_beetle: **_Reprodução do problema:_**
 Para reproduzir o bug/problema, é necessário seguir as seguintes etapas:
-1. Importar o módulo ```package.module```
-2. Executar a função ```function```
-3. Estabelecer os parâmetros ```(param_a='a', param_b='b')```
-4. Visualizar o erro ```Exception e```
+1. [ ] Importar o módulo ```package.module```
+2. [ ] Executar a função ```function```
+3. [ ] Estabelecer os parâmetros ```(param_a='a', param_b='b')```
+4. [ ] Visualizar o erro ```Exception e```
 ___
 :gear: **_Comportamento adequado:_**
 TODO: descrever o que se esperava da funcionalidade.
