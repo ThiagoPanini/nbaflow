@@ -8,10 +8,10 @@ assignees: ThiagoPanini
 ---
 
 :books: **_Funções, métodos ou objetos alvo:_**
-TODO: insira, na lista abaixo, os elementos de código que necessitam de melhorias na documentação. Exemplo:
+Elementos de código que necessitam de melhorias na documentação:
 - Função `function` presente em `pkg/module.py`
 - Método `method` da classe `class`
-- Módulo `pkg.module` inteiro
+- Módulo `pkg.module`
 ___
-:pencil2: Detalhes adicionais [OPCIONAL]
-TODO: forneça templates que julgar adequados para melhorar a documentação do código existente. Se aplicável, indique exatamente problemas relacionados a documentação existente.
+:pencil2: **_Detalhes adicionais_**
+TODO: forneça uma descrição adicional da issue, templates que julgar adequados para melhorar a documentação do código existente e, se aplicável, indique problemas relacionados a documentação existente.

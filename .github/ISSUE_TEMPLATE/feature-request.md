@@ -11,7 +11,7 @@ assignees: ThiagoPanini
 TODO: forneça detalhes sobre como a nova funcionalidade poderia se comportar em meio ao projeto.
 ___
 :trophy: **_Resumo sobre benefícios da nova funcionalidade:_**
-TODO: descreva como essa nova funcionalidade impactaria no usuário final e quais suas principais vantagens. Exemplo:
+Com a implementação dessa nova funcionalidade, os usuários poderiam: 
 * Obter...
 * Consumir...
 * Garantir que...
@@ -19,7 +19,7 @@ TODO: descreva como essa nova funcionalidade impactaria no usuário final e quai
 * ...
 ___
 :books: **_Provável complexidade:_** [OPCIONAL]
-TODO: coloque um _x_ na opção mais adequada em relação a possível complexidade da feature
+A melhor opção que descreve a complexidade associada a esta funcionalidade é:
 - [ ] Extrema complexidade
 - [ ] Alta complexidade
 - [ ] Média complexidade

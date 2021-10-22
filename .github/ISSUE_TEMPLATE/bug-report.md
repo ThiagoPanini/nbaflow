@@ -14,7 +14,7 @@ TODO: forneça uma visão clara e direta do bug/problema e mencione qual a funci
 ```
 ___
 :lady_beetle: **_Reprodução do problema:_**
-TODO: descreva as etapas para reprodução do bug/problema. Exemplos:
+Para reproduzir o bug/problema, é necessário seguir as seguintes etapas:
 1. Importar o módulo ```package.module```
 2. Executar a função ```function```
 3. Estabelecer os parâmetros ```(param_a='a', param_b='b')```
@@ -30,6 +30,6 @@ ___
 TODO: adicione capturas de tela com intuito de auxiliar no entendimento do bug/problema.
 ___
 :speech_balloon: **_Possíveis soluções para o problema:_** [OPCIONAL]
-TODO: insira possíveis soluções adequadas para o bug/problema. Exemplo:
+A resolução do bug/problema poderia ser implementada a partir de:
 - Solução A
 - Solução B
