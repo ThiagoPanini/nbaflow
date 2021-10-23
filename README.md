@@ -25,7 +25,7 @@
 - [Pacote Python NBAFlow](#pacote-python-nbaflow)
   - [Instalação](#instalação)
   - [Features](#features)
-  - [Exemplos de Uso](#exemplos-de-uso)
+  - [Exemplo de Uso](#exemplo-de-uso)
 - [Painel Tableau NBAFlow](#painel-tableau-nbaflow)
 
 ## Sobre o NBAFlow
@@ -132,4 +132,10 @@ Como mencionado na descrição inicial de funcionalidades do projeto, ao longo d
     <br><img src="https://i.imgur.com/VWn2Pt2.png" alt="nbaflow-tableau-02>
 </div>
 <br/>
+___
+        
+        ## Contatos
+
+* LinkedIn: https://www.linkedin.com/in/thiago-panini/
+* Outros pacotes desenvolvidos: https://github.com/ThiagoPanini
 
