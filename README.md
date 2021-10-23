@@ -30,7 +30,7 @@
 
 ## Sobre o NBAFlow
 
-O projeto NBAFlow tem como propósito encapsular e abstrair o consumo de APIs relacionadas à NBA visando propor uma maior facilidade na extração e análise de dados relacionados por usuários que desejam ter em mãos todo esse _pool_ de usabilidade. Tendo como principal fonte a biblioteca Python [`nba_api`](https://github.com/swar/nba_api) que, por sua vez, funciona como um facilitador para acesso aos _endpoints_ do [site oficial de estatísticas da NBA](https://www.nba.com/stats/), este projeto une ferramentas já existentes para propor funcionalidades específicas de acordo com as principais necessidades de análise dos amantes do esporte.
+O projeto NBAFlow tem como propósito encapsular e abstrair o consumo de APIs relacionadas à NBA, facilitando a extração e a análise de dados e proporcionando aos por usuários um _pool_ de funcionalidades ligadas à NBA. Tendo como principal fonte a biblioteca Python [`nba_api`](https://github.com/swar/nba_api) que, por sua vez, funciona como um facilitador para acesso aos _endpoints_ do [site oficial de estatísticas da NBA](https://www.nba.com/stats/), este projeto une ferramentas já existentes para propor funcionalidades específicas de acordo com as principais necessidades de análise dos amantes do esporte.
 
 <div align="center">
     <br><img src="https://i.imgur.com/IN9oZjn.jpg" alt="nbaflow diagram">
