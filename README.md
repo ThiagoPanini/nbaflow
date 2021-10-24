@@ -27,10 +27,11 @@
   - [Features](#features)
   - [Exemplo de Uso](#exemplo-de-uso)
 - [Painel Tableau NBAFlow](#painel-tableau-nbaflow)
+- [Contatos](#contatos)
 
 ## Sobre o NBAFlow
 
-O projeto NBAFlow tem como propósito encapsular e abstrair o consumo de APIs relacionadas à NBA, facilitando a extração e a análise de dados e proporcionando aos por usuários um _pool_ de funcionalidades ligadas à NBA. Tendo como principal fonte a biblioteca Python [`nba_api`](https://github.com/swar/nba_api) que, por sua vez, funciona como um facilitador para acesso aos _endpoints_ do [site oficial de estatísticas da NBA](https://www.nba.com/stats/), este projeto une ferramentas já existentes para propor funcionalidades específicas de acordo com as principais necessidades de análise dos amantes do esporte.
+O projeto NBAFlow tem como propósito encapsular e abstrair o consumo de APIs relacionadas à NBA, facilitando a extração e a análise de dados e proporcionando aos usuários um _pool_ de funcionalidades ligadas à uma das maiores ligas de esportes do mundo. Tendo como principal fonte a biblioteca Python [`nba_api`](https://github.com/swar/nba_api) como intermediadora do site oficial de [estatísticas da NBA](https://www.nba.com/stats/), este projeto une ferramentas já existentes para propor funcionalidades específicas de acordo com as principais necessidades de análise dos amantes do esporte.
 
 <div align="center">
     <br><img src="https://i.imgur.com/IN9oZjn.jpg" alt="nbaflow diagram">
@@ -38,10 +39,10 @@ O projeto NBAFlow tem como propósito encapsular e abstrair o consumo de APIs re
 
 ## Funcionalidades Disponíveis
 
-Uma vez conhecida a arquitetura de desenvolvimento do NBAFlow, é importante ter conhecimento sobre as _features_ contempladas pelo projeto (até o momento!). Neste cenário, o projeto como um todo pode ser dividido em duas principais frentes de consumo para os usuários:
+Uma vez conhecida a arquitetura de desenvolvimento do NBAFlow, é importante ter conhecimento sobre as _features_ contempladas pelo projeto (até o momento!). Neste cenário, o projeto pode ser dividido em duas principais frentes de consumo para os usuários:
 
-- 🐍 **_Pacote Python nbaflow:_** neste modo de consumo, o usuário poderá instalar o pacote Python já disponível no [PyPI](https://pypi.org/project/nbaflow/) e utilizar as funções, classes e métodos disponíveis dentro de seu próprio fluxo de extração de dados.
-- 📊 **_Painel NBAFlow no Tableau Public:_** visando propor um consumo dinâmico, foi desenvolvido um painel no Tableau com algumas visões extremamente interessantes considerando as extrações realizadas pelas próprias funcionalidades presentes no código nbaflow. Com isso, os usuários poderão acessar este maravilhoso dashboard diretamente do [Tableau Public](https://public.tableau.com/app/profile/thiago.henrique.gomes.panini/viz/NBAFlow-InsightsdeDadosdaNBA/PaineldeEstatsticasdeJogadores) para ter insights interessantes sobre jogadores da NBA.
+- 🐍 **_Pacote Python nbaflow:_** neste modo de consumo, o usuário poderá instalar o pacote Python já disponível no [PyPI](https://pypi.org/project/nbaflow/) e utilizar as funções, classes e métodos disponíveis dentro de seus próprios fluxos de extração de dados.
+- 📊 **_Painel NBAFlow no Tableau Public:_** neste modelo de uso, os usuários têm em mãos um painel no Tableu desenvolvido a partir das próprioas funcionalidades do projeto, garantindo assim visões extremamente interessantes com as melhores práticas de UX e UI. O dashboard pode ser acessado diretamente do [Tableau Public](https://public.tableau.com/app/profile/thiago.henrique.gomes.panini/viz/NBAFlow-InsightsdeDadosdaNBA/PaineldeEstatsticasdeJogadores).
 
 > O post de divulgação do painel NBAFlow foi visto por mais de 12 mil pessoas no [LinkedIn](https://www.linkedin.com/posts/thiago-panini_python-tableau-nba-activity-6822851884097773568-UD_p), sendo compartilhado por um dos [gerentes nacionais](https://www.linkedin.com/posts/jaimem2_python-tableau-nba-activity-6822904915346628608-_wZN) da Tableau Software e por diretores de grandes empresas, como [Salesforce](https://www.linkedin.com/posts/marilouvain_python-tableau-nba-activity-6822911222367752195-GY05).
 
@@ -51,7 +52,7 @@ ___
 
 ### Instalação
 
-Com o [ambiente virtual python](https://realpython.com/python-virtual-environments-a-primer/) ativo, para a instalação do pacote _nbaflow_ via pip, basta executar o comando abaixo:
+Com o [ambiente virtual python](https://realpython.com/python-virtual-environments-a-primer/) ativo, basta realizar a instalação do pacote _nbaflow_ a partir da execução do comando abaixo:
 
 ```bash
 pip install nbaflow
@@ -72,9 +73,9 @@ ___
 
 ### Features
 
-Até o presente momento, o pacote _nbaflow_ conta com o módulo `players.py` responsável por consolidar as principais operações relacionadas à extração de dados de jogadores da NBA, sejam informações básicas de atividade na liga ou então histórico de cada uma das partidas disputadas em uma determinada temporada (regular ou playoffs). Em sua versão mais recente, o referido módulo está estruturado em um formato de funções e entrega, a princípio, as seguintes funcionalidades:
+Até o presente momento, o pacote _nbaflow_ conta com o módulo `players.py` responsável por consolidar as principais operações relacionadas à extração de dados de jogadores da NBA, incluindo informações básicas de atividade na liga ou então histórico de cada uma das partidas disputadas em uma determinada temporada (regular ou playoffs). Em sua versão mais recente, o referido módulo está estruturado em um formato de funções, as quais são detalhadas abaixo:
 
-| Função                      | Descrição                                                                                              |
+| Função                      | Descrição Resumida                                                                                              |
 | :-------------------------: | :---------------------------------------------------------------------------------------------------:  |         
 | `get_player_info()`         | Coleta informações gerais de jogadores a partir do endpoint `commonallplayers` da biblitoeca `nba_api` |
 | `get_player_image()`        | Requisita a imagem oficial de um jogador (identificado por um `player_id`) direto do site da NBA       |
@@ -82,13 +83,13 @@ Até o presente momento, o pacote _nbaflow_ conta com o módulo `players.py` res
 
 Cada uma das funções acima listadas possuem uma documentação completa e que pode ser acessada diretamente no respectivo módulo.
 
-Adicionalmente, foi construída a classe `PlayerFeatures`, também presente no módulo `players.py`, com o objetivo de gerenciar possíveis problemas de timeout eventualmente obtidos em scripts que utilizam as funções acima citadas. Propondo uma forma simples de garantir a execução da função e a obtenção do dado solicitado, a classe possui regras de identificação e reprocessamento de requisição em casos de erros de _timeout_, trazendo assim uma abordagem que permite o usuário configurar um laço infinito de repetição ou então definir um número máximo de tentativas a ser considerada na obtenção dos dados.
+Adicionalmente, foi construída a classe `PlayerFeatures` com o objetivo de gerenciar problemas de timeout eventualmente obtidos em scripts que utilizam as funções acima citadas, principalmente em cenários de múltiplas requisições. Propondo uma forma simples de garantir a execução da função e a obtenção do dado solicitado, a classe possui regras de identificação e reprocessamento de requisições em casos de erros de _timeout_, trazendo assim uma abordagem que permite ao usuário configurar um laço infinito de repetição ou então definir um número máximo de tentativas a serem consideradas na obtenção dos dados.
 
 ___
 
 ### Exemplo de Uso
 
-O repositório possui [scripts](https://github.com/ThiagoPanini/nbaflow/tree/main/scripts) prontos capazes de fornecer excelentes exemplos de utilização das funcionalidades do pacote _nbaflow_. Em resumo, o trecho resumido de código abaixo é responsável por obter dados de partidas do jogador Damian Lillard (`player_id=203081`) nos playoffs 2020-21 (o jogo contra o Denver de duas prorrograções ainda me assombra):
+O repositório possui [scripts](https://github.com/ThiagoPanini/nbaflow/tree/main/scripts) prontos capazes de fornecer excelentes exemplos de utilização das funcionalidades do pacote _nbaflow_. Em resumo, o trecho de código abaixo obtém dados de partidas do jogador Damian Lillard (`player_id=203081`) nos playoffs 2020-21 (aquele jogo 5 contra o Denver, com duas prorrograções, ainda me assombra):
 
 ```python
 # Importando bibliotecas
@@ -117,7 +118,7 @@ Para descobrir o id de um jogador, é possível utilizar a função `get_players
 
 ## Painel Tableau NBAFlow
 
-Como mencionado na descrição inicial de funcionalidades do projeto, ao longo do processo de desenvolvimento, achou-se interessante a ideia de disponibilizar um dashboard altamente interativo e atrativo aos usuários para que estes possam acessar diretamente os resultados dos módulos nbaflow pelo Tableau. Assim, surgiu o [Painel NBAFlow](https://public.tableau.com/app/profile/thiago.henrique.gomes.panini/viz/NBAFlow-InsightsdeDadosdaNBA/PaineldeEstatsticasdeJogadores?publish=yes) contando, até o momento, com um painel inicial de navegação e um panel analítico de jogadores com uma série de visões relevantes para que os melhores insights e análises possam ser realizados com um esforço mínimo do usuário.
+Ao longo do processo de desenvolvimento de todo o ferramental NBAFlow, achou-se interessante a ideia de disponibilizar um dashboard altamente interativo e atrativo aos usuários para que estes possam acessar diretamente os resultados dos módulos do projeto pelo Tableau. Assim, surgiu o [Painel NBAFlow](https://public.tableau.com/app/profile/thiago.henrique.gomes.panini/viz/NBAFlow-InsightsdeDadosdaNBA/PaineldeEstatsticasdeJogadores?publish=yes) contando, até o momento, com um painel inicial de navegação e um panel analítico de jogadores com uma série de visões relevantes para que os melhores insights possam ser retirados e as mais relevantes análises possam ser realizados.
 
 * _Capa / Painel Principal_
 
@@ -133,8 +134,10 @@ Como mencionado na descrição inicial de funcionalidades do projeto, ao longo d
 </div>
 <br/>
 ___
-        
-        ## Contatos
+<div align="left">
+</div>    
+
+## Contatos
 
 * LinkedIn: https://www.linkedin.com/in/thiago-panini/
 * Outros pacotes desenvolvidos: https://github.com/ThiagoPanini
