@@ -1,0 +1,6 @@
+nba_api
+build
+flake8
+pydocstyle
+pytest
+pytest-cov
