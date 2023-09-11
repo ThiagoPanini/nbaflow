@@ -1,6 +1,8 @@
-# Pandora
+# NBAFlow: Helping users to extract and analyse NBA Data
 
-## Visão Geral
+## Overview
+
+The nbaflow Python package is built on the top of the swar's [nba_api](https://github.com/swar/nba_api) in order to group and put together some features that can make the life of users a little bit easier.
 
 Pandora é um modelo de repositório do GitHub criado para facilitar a organização e configuração de outros repositórios utilizados para criação bibliotecas Python. Se você tem interesse em construir e publicar pacotes Python, bastar obter o *template pandora* e começar a criar seus próprios repositórios pré configurados e prontos para uso.
 
