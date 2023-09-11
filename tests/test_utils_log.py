@@ -10,7 +10,7 @@ ___
 import pytest
 import logging
 
-from src.utils.log import log_config
+from nbaflow.utils.log import log_config
 
 
 @pytest.mark.utils
@@ -22,4 +22,4 @@ def test_log_config_function_returns_a_logger_object():
     """
 
     logger = log_config()
-    assert type(logger) == logging.Logger
+    assert isinstance(logger, logging.Logger)
