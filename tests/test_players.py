@@ -18,7 +18,7 @@ from nbaflow.players import NBAPlayers
 @pytest.mark.players
 @pytest.mark.get_players_info
 def test_players_info_is_delivered_as_a_pandas_dataframe(
-    nba_players: NBAPlayers 
+    nba_players: NBAPlayers
 ):
     """
     G: Given that an user wants to get information about NBA players
@@ -48,7 +48,7 @@ def test_players_info_dataframe_has_a_set_of_expected_columns(
                      'team_city', 'team_name', 'team_abbreviation',
                      'team_code', 'team_slug', 'games_played_flag',
                      'otherleague_experience_ch']
-    
+
     # Getting players DataFrame and its columns
     df_players_info = nba_players.get_players_info()
     current_cols = list(df_players_info.columns)

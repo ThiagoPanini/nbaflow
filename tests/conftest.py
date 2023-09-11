@@ -8,7 +8,6 @@ ___
 
 # Importing libraries
 import pytest
-import pandas as pd
 
 from nbaflow.players import NBAPlayers
 
@@ -17,8 +16,3 @@ from nbaflow.players import NBAPlayers
 @pytest.fixture()
 def nba_players() -> NBAPlayers:
     return NBAPlayers()
-
-# Returning a pandas DataFrame with result of get_players_info() method
-@pytest.fixture()
-def df_players_info(nba_players: NBAPlayers) -> pd.DataFrame:
-    return nba_players.get_players_info() # Validar se precisa mesmo, dado que existem regras como active=True
