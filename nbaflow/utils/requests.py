@@ -18,39 +18,30 @@ from time import sleep
 logger = log_config(logger_name=__file__)
 
 
-# Function that handles timeout erros on requesting data from nba_api
+# Function that handles timeout errors on requesting data from nba_api
 def handle_timeout_errors(
-    function,
-    function_args: dict,
-    max_attempts: int = 10,
-    timesleep: int = 3,
-    timeout_increase: int = 5
+    endpoint_request,
+    max_attempts: int = 5,
+    timesleep: int = 5,
 ):
     """
     Handle timeout errors when requesting data from nba_api.
 
     Args:
-        function (function):
-            The function to call for requesting data.
-
-        function_args (dict):
-            A dictionary containing the arguments to be passed to the function.
+        endpoint_request (Any):
+            The request to be made using the NBA API endpoint.
 
         max_attempts (int, optional):
-            The maximum number of attempts to make the request. Defaults to 10.
+            The maximum number of attempts to make the request. Defaults to 5.
 
         timesleep (int, optional):
-            The number of seconds to sleep between attempts. Defaults to 3.
-
-        timeout_increase (int, optional):
-            The amount by which to increase the timeout on each attempt.
-            Defaults to 5.
+            The number of seconds to sleep between attempts. Defaults to 5.
 
     Returns:
-        Any: The result returned by the provided function.
+        Any: The result returned by the provided request.
 
     Raises:
-        Exception: If an error occurs during the request process.
+        ReadTimeout: If all attempts to make the request time out.
 
     Note:
         This function handles timeout errors (ReadTimeout) that may occur
@@ -58,30 +49,32 @@ def handle_timeout_errors(
         'max_attempts') with increasing timeouts.
 
     Example:
-        >>> data = handle_timeout_errors(request_data, {'param1': 'value1',
-        'param2': 'value2'}, max_attempts=5)
+        >>> data = handle_timeout_errors(
+        >>>    request_data, max_attempts=5, timesleep=3)
     """
 
     # Looping over a given number of request attempts
     for i in range(max_attempts):
         try:
             # Returning whatever the function was coded to return
-            return function(**function_args)
+            return endpoint_request
 
         # Handling timeout errors
         except ReadTimeout:
-            logger.warning(f"Timeout error on requesting data w/ function "
-                           f"{function.__name__}() with the following args "
-                           f"{function_args}. A new attempt will be made with "
-                           f"+{timeout_increase} secs of timeout increase.")
+            logger.warning("Timeout error on requesting data from nba_api in "
+                           f"the {i + 1}/{max_attempts}. Next attempt will be "
+                           f"made after {timesleep} seconds.")
 
-            # Increasing timeout on function args for a new attempt
-            function_args["timeout"] += timeout_increase
+            # Sleeping time before next request attempt
             sleep(timesleep)
 
         # Another error was thrown and so there is nothing to do
         except Exception as e:
-            logger.error("Error on trying to request data with function "
-                         f"{function.__name__}() with the following args "
-                         f"{function_args}.")
+            logger.error("A different exception than ReadTimeout was thrown "
+                         "and so this handler function isn't able to deal "
+                         "with it. Check the traceback for more details.")
             raise e
+
+    # Exceeded max tries
+    logger.error("Exceeded max tries when trying to request data from nba_api")
+    raise ReadTimeout
