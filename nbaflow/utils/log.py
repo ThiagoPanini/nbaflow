@@ -23,8 +23,11 @@ def log_config(
     Python package to retrieve users a basic logger object with a given
     configuration.
 
-    Examples:
+    Example:
         ```python
+        # Importing the function
+        from nbaflow.utils.log import log_config
+
         # Getting and configuring the logger object
         logger = log_config(logger)
         ```

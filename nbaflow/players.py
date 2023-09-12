@@ -24,15 +24,27 @@ logger = log_config(logger_name=__file__)
 
 def get_players_data(
     timeout: int = 30,
-    active_players: bool = True
+    only_active_players: bool = True
 ) -> pd.DataFrame:
-    """"
+    """
     Retrieve data about NBA players.
+
+    This function uses the `commonallplayers` nba_api endpoint to retrieve
+    data about NBA players, regardless wheter they are active or not. So, the
+    user gets the data in a pandas DataFrame format.
+
+    Example:
+        ```python
+        # Importing the function to get data about NBA players
+        from nbaflow.players import get_players_data
+
+        # Getting NBA data
+        df_players_data = get_players_data(only_active_players=False)
+        ```
 
     Args:
         active_players (bool, optional):
             If True, only active players' data will be returned.
-            Defaults to True.
 
     Returns:
         pd.DataFrame: A DataFrame containing data about NBA players.
@@ -41,10 +53,6 @@ def get_players_data(
         This function fetches data about NBA players using the
         'common_all_players' endpoint from the nba_api.
         It optionally filters the data to include only active players.
-
-    Example:
-        >>> from nbaflow.players import get_players_data
-        >>> df_players_data = get_players_data(active_players=True)
     """
 
     # Getting players data
@@ -58,7 +66,7 @@ def get_players_data(
     ]
 
     # Getting only active players (if applicable)
-    if active_players:
+    if only_active_players:
         current_year = str(datetime.now().year)
         df_players = df_players.query(f"to_year == {current_year}")
 
