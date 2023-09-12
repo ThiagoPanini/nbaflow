@@ -85,8 +85,8 @@ class NBAPlayers():
 
         # Getting players information
         df_players = commonallplayers.CommonAllPlayers(
-                timeout=self.request_timeout
-            ).common_all_players.get_data_frame()
+            timeout=self.request_timeout
+        ).common_all_players.get_data_frame()
 
         # Preparing the DataFrame columns
         df_players.columns = [
