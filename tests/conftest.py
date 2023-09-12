@@ -8,11 +8,18 @@ ___
 
 # Importing libraries
 import pytest
+import pandas as pd
 
-from nbaflow.players import NBAPlayers
+from nbaflow.players import get_players_data
 
 
-# Returning a NBAPlayers class object
+# The result of get_players_data function for active players only
 @pytest.fixture()
-def nba_players() -> NBAPlayers:
-    return NBAPlayers()
+def df_active_players_data() -> pd.DataFrame:
+    return get_players_data(active_players=True)
+
+
+# The result of get_players_data function for all players in NBA history
+@pytest.fixture()
+def df_all_players_data() -> pd.DataFrame:
+    return get_players_data(active_players=False)

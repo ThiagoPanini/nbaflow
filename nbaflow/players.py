@@ -22,80 +22,44 @@ from nbaflow.utils.log import log_config
 logger = log_config(logger_name=__file__)
 
 
-class NBAPlayers():
-    """
-    A class for fetching information about NBA players.
+def get_players_data(
+    timeout: int = 30,
+    active_players: bool = True
+) -> pd.DataFrame:
+    """"
+    Retrieve data about NBA players.
 
     Args:
-        request_timeout (int, optional):
-            The timeout duration for API requests in seconds. Defaults to 30.
+        active_players (bool, optional):
+            If True, only active players' data will be returned.
+            Defaults to True.
 
-    Attributes:
-        request_timeout (int): The timeout duration for API requests.
+    Returns:
+        pd.DataFrame: A DataFrame containing data about NBA players.
 
-    Methods:
-        get_players_info(active_players=True):
-            Retrieve information about NBA players.
+    Note:
+        This function fetches data about NBA players using the
+        'common_all_players' endpoint from the nba_api.
+        It optionally filters the data to include only active players.
 
     Example:
-        >>> nba_data = NBAPlayers()
-        >>> player_info = nba_data.get_players_info(active_players=True)
+        >>> from nbaflow.players import get_players_data
+        >>> df_players_data = get_players_data(active_players=True)
     """
 
-    def __init__(
-        self,
-        request_timeout: int = 30,
-        handle_timeout_errors: bool = True,
-        request_max_tries: int = 5
-    ) -> None:
-        """
-        Initialize the NBAPlayers instance.
+    # Getting players data
+    df_players = commonallplayers.CommonAllPlayers(
+        timeout=timeout
+    ).common_all_players.get_data_frame()
 
-        Args:
-            request_timeout (int, optional):
-                The timeout duration for API requests in seconds.
-                Defaults to 30.
-        """
+    # Preparing the DataFrame columns
+    df_players.columns = [
+        col.lower().strip() for col in df_players.columns
+    ]
 
-        self.request_timeout = request_timeout
-        self.handle_timeout_errors = handle_timeout_errors
-        self.request_max_tries = request_max_tries
+    # Getting only active players (if applicable)
+    if active_players:
+        current_year = str(datetime.now().year)
+        df_players = df_players.query(f"to_year == {current_year}")
 
-    def get_players_info(self, active_players: bool = True) -> pd.DataFrame:
-        """
-        Retrieve information about NBA players.
-
-        Args:
-            active_players (bool, optional):
-                If True, only active players' information will be returned.
-                Defaults to True.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing information about NBA players.
-
-        Note:
-            This method fetches data about NBA players using the
-            'common_all_players' endpoint from the nba_api.
-            It optionally filters the data to include only active players.
-
-        Example:
-            >>> nba_data = NBAPlayers()
-            >>> player_info = nba_data.get_players_info(active_players=True)
-        """
-
-        # Getting players information
-        df_players = commonallplayers.CommonAllPlayers(
-            timeout=self.request_timeout
-        ).common_all_players.get_data_frame()
-
-        # Preparing the DataFrame columns
-        df_players.columns = [
-            col.lower().strip() for col in df_players.columns
-        ]
-
-        # Getting only active players (if applicable)
-        if active_players:
-            current_year = str(datetime.now().year)
-            df_players = df_players.query(f"to_year == {current_year}")
-
-        return df_players
+    return df_players
