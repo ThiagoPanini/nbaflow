@@ -1,6 +1,9 @@
 # Arquivos específicos do repositório
 data/
 viz/
+tests/notebooks/
+legacy/
+tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
