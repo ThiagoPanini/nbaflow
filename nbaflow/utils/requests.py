@@ -50,7 +50,8 @@ def handle_timeout_errors(
 
     Example:
         >>> data = handle_timeout_errors(
-        >>>    request_data, max_attempts=5, timesleep=3)
+        >>>    request_data, max_attempts=5, timesleep=3
+        >>> )
     """
 
     # Looping over a given number of request attempts
@@ -62,8 +63,8 @@ def handle_timeout_errors(
         # Handling timeout errors
         except ReadTimeout:
             logger.warning("Timeout error on requesting data from nba_api in "
-                           f"the {i + 1}/{max_attempts}. Next attempt will be "
-                           f"made after {timesleep} seconds.")
+                           f"the {i + 1}/{max_attempts} try. Next attempt "
+                           f"will be made after {timesleep} seconds.")
 
             # Sleeping time before next request attempt
             sleep(timesleep)
