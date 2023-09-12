@@ -16,7 +16,6 @@ import pandas as pd
 from datetime import datetime
 
 from nbaflow.utils.log import log_config
-from nbaflow.utils.requests import handle_timeout_errors
 
 
 # Setting up a logger object
@@ -85,11 +84,9 @@ class NBAPlayers():
         """
 
         # Getting players information
-        df_players = handle_timeout_errors(
-            endpoint_request=commonallplayers.CommonAllPlayers(
+        df_players = commonallplayers.CommonAllPlayers(
                 timeout=self.request_timeout
             ).common_all_players.get_data_frame()
-        )
 
         # Preparing the DataFrame columns
         df_players.columns = [

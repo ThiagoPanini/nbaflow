@@ -15,6 +15,7 @@ import pandas as pd
 from nbaflow.players import NBAPlayers
 
 
+@pytest.mark.skip(reason="Figuring out how to mock nba_api endpoints")
 @pytest.mark.players
 @pytest.mark.get_players_info
 def test_players_info_is_delivered_as_a_pandas_dataframe(
@@ -30,6 +31,7 @@ def test_players_info_is_delivered_as_a_pandas_dataframe(
     assert isinstance(nba_players.get_players_info(), pd.DataFrame)
 
 
+@pytest.mark.skip(reason="Figuring out how to mock nba_api endpoints")
 @pytest.mark.players
 @pytest.mark.get_players_info
 def test_players_info_dataframe_has_a_set_of_expected_columns(
@@ -56,6 +58,7 @@ def test_players_info_dataframe_has_a_set_of_expected_columns(
     assert current_cols == expected_cols
 
 
+@pytest.mark.skip(reason="Figuring out how to mock nba_api endpoints")
 @pytest.mark.players
 @pytest.mark.get_players_info
 def test_total_of_active_players_is_less_than_total_of_all_players(
