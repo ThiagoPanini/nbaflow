@@ -13,15 +13,16 @@ with open("README.md", "r", encoding='utf-8') as f:
 # Setting up package information
 setup(
     name='nbaflow',
-    version='0.1.0',
+    version='0.1.1',
     author='Thiago Panini',
     author_email='panini.development@gmail.com',
     packages=find_packages(),
     install_requires=[
-        "nba_api"
+        "nba_api",
+        "pandas"
     ],
     license='MIT',
-    description="Making it easier to extract and analyse NBA data.",
+    description="Making it easier to extract and analyze NBA data.",
     long_description=__long_description__,
     long_description_content_type="text/markdown",
     url='https://github.com/ThiagoPanini/nbaflow',
